@@ -10,16 +10,19 @@ using UnityEngine;
  * the book.
  * 
  */
- [RequireComponent(typeof(Rigidbody2D))]
+ [RequireComponent(typeof(Rigidbody2D), typeof(CircleCollider2D))]
 public class VOAgent : MonoBehaviour
 {
 
     private Rigidbody2D rb;
 
+    private Vector3 Forwards => transform.up;
+
     // Agent
     [Header("Agent Config")]
     [SerializeField]
     private float agentRadius = 0.5f;
+    [SerializeField]
     private float agentMoveSpeed = 5f; // units per second.
 
     // Avoid
@@ -29,25 +32,54 @@ public class VOAgent : MonoBehaviour
 
     [SerializeField]
     private int maxDetectAgents = 1;
-    RaycastHit2D[] detectedAgents;
-    
+    private RaycastHit2D[] detectedAgents;
+
+    private Vector2 currentVelocity = Vector2.zero;
+
+    public Transform targetPosition;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        
-        transform.localScale = new Vector3(agentRadius, agentRadius, 1f);
+        GetComponent<CircleCollider2D>().radius = agentRadius;
+
+        transform.localScale = new Vector3(agentRadius*2f, agentRadius*2f, 1f);
 
         detectedAgents = new RaycastHit2D[ maxDetectAgents ];
 
     }
 
+    public void SetStartVelocity(Vector2 startVelocity)
+    {
+        // Theres no need to set the velocity as it always moves forwards.
+        SetRotationFromVelocity(currentVelocity);
+
+    }
+
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
 
+        Vector3 dir = ( targetPosition.position - transform.position ).normalized;
+
         // move forwards.
-        Vector2 moveVelocity = transform.forward * agentMoveSpeed * Time.deltaTime;
-        rb.velocity = moveVelocity;
+        currentVelocity = dir * agentMoveSpeed * Time.deltaTime;
+        rb.velocity = currentVelocity;
+
+        SetRotationFromVelocity(currentVelocity);
+
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="velocity">Velocity relevent to this agent</param>
+    /// <returns></returns>
+    private void SetRotationFromVelocity( Vector2 velocity )
+    {
+        // find the vector between us and the target velocity.
+        float rotation = Mathf.Atan2(-velocity.x, velocity.y) * Mathf.Rad2Deg;
+        transform.eulerAngles = new Vector3(0, 0, rotation);
 
     }
 }
