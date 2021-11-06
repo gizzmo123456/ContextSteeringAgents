@@ -17,6 +17,9 @@ public class VOAgent : MonoBehaviour
     private Rigidbody2D rb;
 
     private Vector3 Forwards => transform.up;
+    private Vector3 Right => transform.right;
+
+    private float startRotation;
 
     // Agent
     [SerializeField]
@@ -26,6 +29,8 @@ public class VOAgent : MonoBehaviour
     private float agentRadius = 0.5f;
     [SerializeField]
     private float agentMoveSpeed = 5f; // units per second.
+
+    private bool happy = true;  // agent if happy when no other agnets are in range.
 
     // Avoid
     [Header("Avoid Config")]
@@ -39,6 +44,8 @@ public class VOAgent : MonoBehaviour
     private Vector2 currentVelocity = Vector2.zero;
 
     public Transform targetPosition;
+
+    public LayerMask layerMask;
 
     public Transform TEMPMarker;
     private Transform[] markers;
@@ -61,6 +68,8 @@ public class VOAgent : MonoBehaviour
             markers[i].name = $"{name}-MARKER-{i}";
             markers[i].GetComponent<SpriteRenderer>().color = agentColour;
         }
+
+        startRotation = transform.eulerAngles.z;
     }
 
     public void SetStartVelocity(Vector2 startVelocity)
@@ -74,32 +83,52 @@ public class VOAgent : MonoBehaviour
     void FixedUpdate()
     {
 
-        Vector3 dir = ( targetPosition.position - transform.position ).normalized;
-
+        Vector3 target = targetPosition.position;
+        
         // Cast a circel cast into world at our current location to find if any NPC are in radius.
-        int rayHitCount = Physics2D.CircleCastNonAlloc( transform.position, detectRadius, Vector2.zero, detectedAgents, 0f );
+        int rayHitCount = Physics2D.CircleCastNonAlloc( transform.position, detectRadius, Vector2.zero, detectedAgents, 0f, layerMask );
 
         if ( rayHitCount > 1 )
         {
+
+            float distance = Mathf.Infinity;
             // Avoid things.
-            foreach (RaycastHit2D rh in detectedAgents)
+            for (int i = 0; i < Mathf.Min(rayHitCount, detectedAgents.Length); i++)
+            {
+                RaycastHit2D rh = detectedAgents[i];
+
                 if (rh.transform != transform)
                 {
 
                     VOAgent otherAgent = rh.transform.GetComponent<VOAgent>();
                     Vector2 vector = (rh.transform.position - transform.position).normalized;
+
                     float dot = Vector2.Dot(Forwards, vector);
 
+                    if (otherAgent == null)
+                       continue;
+
                     // make sure the agent is infront of us with upto around 90deg
-                    if (dot > 0.5f) // this can be higher...
+                    if (dot > 0f) // this can be higher...
                     {
-                        print($"{name}: Attempting to avoid {rh.transform.name} ({dot})");
+
+                        float dist = Vector2.Distance(transform.position, rh.transform.position);
+                        if (dist >= distance)
+                            continue;
+
+                        distance = dist;
+
+                        happy = false;
+
+                        //print($"{name}: Attempting to avoid {rh.transform.name} ({dot})");
+
+                        
 
                         // Get the amount of distance that is required between the two agents
                         float avoidDistance = agentRadius + otherAgent.agentRadius;
 
                         // Find the shortest Perpendicular angle between us and the other agent, along the vector
-                        Vector3 perpendicularVector = Vector2.Perpendicular( vector ) * avoidDistance;
+                        Vector3 perpendicularVector = Right * avoidDistance;// otherAgent.Right * avoidDistance;// Vector2.Perpendicular( vector ) * avoidDistance;
 
                         Vector2 target_0 = otherAgent.transform.position + perpendicularVector;// Left along the agents forwards (i think)
                         Vector2 target_1 = otherAgent.transform.position - perpendicularVector;// Right along the agents forwards
@@ -107,26 +136,81 @@ public class VOAgent : MonoBehaviour
                         markers[0].position = target_0;
                         markers[1].position = target_1;
 
-                        float angle_0 = GetAngleFormWorldPosition( target_0 );
-                        float angle_1 = GetAngleFormWorldPosition( target_1 );
+                        float angle_0 = GetAngleFormWorldPosition(target_0) + 180;
 
-                        print($"a_0: {angle_0}, a_1: {angle_1} ");
-                        //float angle_0 = GetAngleForReleventPosition()
+                        float angle_1 = GetAngleFormWorldPosition(target_1) + 180;
 
+                        float angle_0_45 = 90f - Mathf.Abs((angle_0 % 180f) - 90f);
+                        float angle_1_45 = 90f - Mathf.Abs((angle_1 % 180f) - 90f);
+
+                        //if (DEBUG)
+                        //    print($"{name} :: {angle_0_45} <= {angle_1_45}");
+
+                        //if (angle_0_90 - angle_0_45 <= angle_1_90 - angle_1_45)
+                        if (true || angle_0_45 <= angle_1_45)
+                        {
+                            transform.eulerAngles = new Vector3(0, 0, angle_0); // _abs + startRotation);// +180);
+                            //if (DEBUG)
+                            //    print("Angle 0 # " + (angle_0) + $"Angle 1 {angle_1} ||| {angle_0_90} | {angle_1_90}0abs {angle_0_90 - angle_0_45} | 1abs {angle_1_90 - angle_1_45} || {angle_0_45 } | {angle_1_45} ||");
+
+
+                            markers[0].localScale = Vector3.one * 2;
+                            markers[1].localScale = Vector3.one;
+                        }
+                        else
+                        {
+                            transform.eulerAngles = new Vector3(0, 0, angle_1); // _abs + startRotation); //+180); 
+                            //if (DEBUG)
+                            //   print("Angle 1 # " + (angle_0) + $"Angle 1 {angle_1} ||| {angle_0_90} | {angle_1_90}0abs {angle_0_90 - angle_0_45} | 1abs {angle_1_90 - angle_1_45} || {angle_0_45 } | {angle_1_45} ||");
+
+                            markers[0].localScale = Vector3.one;
+                            markers[1].localScale = Vector3.one * 2;
+                        }
+
+                        //print($"{name}: is unhappy, get out of my space... ({dot})");
+
+                    }
+                    else if (!happy && dot < -0.4f)
+                    {
+                        happy = true;
+                        //print($"{name}: is now happy ({dot})");
                     }
                     else
                     {
-                        print($"{name}: No need to avoid {rh.transform.name} ({dot})");
+                        //print($"{name}: keeping true ({dot})");
                     }
                 }
+            }
 		}
+        else
+        {
+            happy = true;
+		}
+
+        if (happy)
+        {
+            float angle_target = GetAngleFormWorldPosition(target);
+
+            //if ( angle_target < 0 )
+                angle_target = 180 + angle_target;
+
+            transform.eulerAngles = new Vector3(0, 0, angle_target );
+
+            markers[0].position = targetPosition.position;
+            markers[1].position = targetPosition.position;
+            //print("###" + angle_target);
+
+            markers[0].localScale = Vector3.one;
+            markers[1].localScale = Vector3.one;
+
+        }
 
 
         // move forwards.
         currentVelocity = Forwards * agentMoveSpeed * Time.deltaTime;
-        // rb.velocity = currentVelocity;
+        rb.velocity = currentVelocity;
 
-        SetRotationFromVelocity(currentVelocity);
+        //SetRotationFromVelocity(currentVelocity);
 
     }
 
@@ -143,7 +227,6 @@ public class VOAgent : MonoBehaviour
 
     }
 
-
     private float GetAngleFormWorldPosition(Vector3 worldPosition)
     {
         return GetAngleFormReleventPosition( transform.position - worldPosition );
@@ -153,4 +236,10 @@ public class VOAgent : MonoBehaviour
     {
         return Mathf.Atan2(-releventPosition.x, releventPosition.y) * Mathf.Rad2Deg;
     }
+
+    private Vector2 GetVelocityVector(Vector3 worldPosition)
+    {
+        return (transform.position - worldPosition).normalized;
+    }
+
 }
