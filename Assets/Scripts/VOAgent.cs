@@ -36,6 +36,7 @@ public class VOAgent : MonoBehaviour
     [Header("Avoid Config")]
     [SerializeField]
     private float detectRadius = 2f;
+    private float ProjectTime => agentMoveSpeed / detectRadius; 
 
     [SerializeField]
     private int maxDetectAgents = 1;
@@ -92,18 +93,35 @@ public class VOAgent : MonoBehaviour
         {
 
             float distance = Mathf.Infinity;
+
             // Avoid things.
             for (int i = 0; i < Mathf.Min(rayHitCount, detectedAgents.Length); i++)
             {
+
                 RaycastHit2D rh = detectedAgents[i];
 
                 if (rh.transform != transform)
                 {
 
                     VOAgent otherAgent = rh.transform.GetComponent<VOAgent>();
-                    Vector2 vector = (rh.transform.position - transform.position).normalized;
 
-                    float dot = Vector2.Dot(Forwards, vector);
+                    Vector2 agentVector = (rh.transform.position - transform.position).normalized;
+                    Vector2 velocityDiff = otherAgent.currentVelocity - currentVelocity;
+
+                    float timeTillCollision = GetMaxTimeTillCollision(velocityDiff, rh.transform.position - transform.position - new Vector3(agentRadius + otherAgent.agentRadius, agentRadius + otherAgent.agentRadius, 0) );
+
+                    print(name+" :: "+timeTillCollision);
+
+                    
+
+                    //float velocityAngle = Mathf.Abs( GetAngleFormReleventPosition(new Vector2(Forwards.x, Forwards.y) - velocityVector ) );
+
+                    //if (velocityAngle > 90)
+                    //    velocityAngle = 180 - velocityAngle;
+
+                    //print($"{name} ## {velocityVector} ## {velocityAngle} ");
+
+                    float dot = Vector2.Dot(Forwards, agentVector);
 
                     if (otherAgent == null)
                        continue;
@@ -111,6 +129,9 @@ public class VOAgent : MonoBehaviour
                     // make sure the agent is infront of us with upto around 90deg
                     if (dot > 0f) // this can be higher...
                     {
+
+                        if (timeTillCollision == Mathf.Infinity || Mathf.Abs(timeTillCollision) > 3)
+                            continue;
 
                         float dist = Vector2.Distance(transform.position, rh.transform.position);
                         if (dist >= distance)
@@ -241,5 +262,23 @@ public class VOAgent : MonoBehaviour
     {
         return (transform.position - worldPosition).normalized;
     }
+
+    // Get the max time till collision, -Inf if a collision can not happen.
+    private float GetMaxTimeTillCollision( Vector3 speedDif, Vector3 vectorDist )
+    {
+        /*
+            Vector2 axisTimeTillCollision = Vector2.zero;
+
+            axisTimeTillCollision.x = speedDif.x != 0 ? vectorDist.x / speedDif.x : Mathf.NegativeInfinity;
+            axisTimeTillCollision.y = speedDif.y != 0 ? vectorDist.y / speedDif.y : Mathf.NegativeInfinity;
+
+            print($"{name} ## {speedDif} ## {vectorDist}");
+
+            return Mathf.Max( axisTimeTillCollision.x, axisTimeTillCollision.y );
+        */
+
+        return vectorDist.magnitude / speedDif.magnitude;
+
+	}
 
 }
