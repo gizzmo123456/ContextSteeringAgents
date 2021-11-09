@@ -30,7 +30,7 @@ public class VOAgent2 : MonoBehaviour
 	// Current avoid Agent (if any)
 
 	private VOAgent2 currentAvoidAgent;
-	private float currentAvoidAgentDistance;
+	private float currentAvoidAgentDistance = Mathf.Infinity;
 
 	[Header( "Target Config" )]
 	[SerializeField] private Transform target;
@@ -57,10 +57,15 @@ public class VOAgent2 : MonoBehaviour
 
 		if ( rayHitCount > 1 )
 		{
-
+			CalculateAvoidAgent( rayHitCount );
 		}
 		else
 		{
+
+			// clear the current avoid agent if present
+			currentAvoidAgent = null;
+			currentAvoidAgentDistance = Mathf.Infinity;
+
 			// go to target things.
 		}
 
@@ -82,7 +87,70 @@ public class VOAgent2 : MonoBehaviour
 
 	private void CalculateAvoidAgent( int rayHitCount )
 	{
-		
+
+		VOAgent2 closestAgent = null;
+		float distance = Mathf.Infinity;
+		float newAvoidDistance = -1;	// for the current avoid agent.
+
+		// if we are currently tracking an agent, caculate its distance befor the other.
+		// then we should skip it when we iterate other all detected agents.
+		if ( currentAvoidAgent != null )
+		{
+
+			float dist = Vector2.Distance( transform.position, currentAvoidAgent.transform.position ) - agentRadius - currentAvoidAgent.agentRadius;
+
+			// make sure its in the detect radius otherwises it will remain set when out of range.
+			if ( dist <= detectRadius )
+			{
+				closestAgent = currentAvoidAgent;
+				newAvoidDistance = distance = dist;
+			}
+			else
+			{
+				print( $"{name} Nope, {dist}" );
+			}
+
+		}
+
+		for ( int i = 0; i < rayHitCount; i++ )
+		{
+
+			// ignore ourself.
+			if ( detectedAgents[i].transform == transform )
+				continue;
+
+			VOAgent2 otherAgent = detectedAgents[i].transform.GetComponent<VOAgent2>();
+
+			if ( otherAgent == currentAvoidAgent )
+				continue;
+
+			float dist = Vector2.Distance( transform.position, otherAgent.transform.position ) - agentRadius - otherAgent.agentRadius;
+
+			if ( dist < 0f )
+				print($"{name} Your in my space {otherAgent.name}");
+
+			// track the cloest agent if not current tracking; or
+			// start tracking the cloest agent that is at least 50% closer than the current agent.
+			if ( closestAgent == null || ( currentAvoidAgent != null && dist < newAvoidDistance / 2f && dist < distance ) )
+			{
+				closestAgent = otherAgent;
+				distance = dist;
+			}
+
+		}
+
+		if ( closestAgent != currentAvoidAgent )
+		{
+
+			string caaName = currentAvoidAgent == null ? "null" : currentAvoidAgent.name;
+			string caName = closestAgent == null ? null : closestAgent.name;
+
+			print( $"{name} has changed avoid agents (f: {caaName} [{newAvoidDistance}], t: {caName} [{distance}])" );
+		}
+
+		currentAvoidAgent = closestAgent;
+		currentAvoidAgentDistance = distance;
+
 	}
 
 	/// <summary>

@@ -7,7 +7,7 @@ public class VOAgentTick : MonoBehaviour
 
 	public static VOAgentTick Inst { get; private set; }
 
-	private List<VOAgent2> agents;
+	private List<VOAgent2> agents = new List<VOAgent2>();
 
 	private void Awake()
 	{
