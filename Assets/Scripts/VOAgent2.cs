@@ -20,7 +20,10 @@ public class VOAgent2 : MonoBehaviour
 	[Header( "Agent Setup" )]
 	[SerializeField] private Color agentColour = Color.red;
 	[SerializeField] private float agentRadius = 0.5f;
+	[SerializeField] private float agentSpeed = 5f;
+
 	[SerializeField] private float fov = 45f;   // degrees
+	//private 
 
 	[Header( "Agent Detect Setup" )]
 	private const int maxDetectAgents = 3;  // define as const so its the same for all agents. ( i could define it in VOAgentTick, so it can be changed in the inspector)
@@ -28,16 +31,23 @@ public class VOAgent2 : MonoBehaviour
 	[SerializeField] private float detectRadius = 3f;
 	[SerializeField] private LayerMask detectAgentLayerMask;
 
-	// Current avoid Agent (if any)
+	// Desired path / Current avoid Agent (if any)
+
+	private Vector3 desiredVectorNorm;
 
 	private VOAgent2 currentAvoidAgent;
 	private float currentAvoidAgentDistance = Mathf.Infinity;
+	private Vector2[] currentAvoidTargets = new Vector2[2];		//The possible position that we can move towards.
 
 	[Header( "Target Config" )]
 	[SerializeField] private Transform target;
 	private Vector3 TargetPosition => target != null ? target.position : Vector3.zero;
 
+	public bool DEBUG = false;
 	public bool DEBUG_DRAW = true;
+	public bool move = false;
+	public Transform TEMPMarker;
+	private Transform[] markers;
 
 	private void Awake()
 	{
@@ -51,6 +61,15 @@ public class VOAgent2 : MonoBehaviour
 
 		VOAgentTick.Inst.RegisterAgent( this );
 
+		// NOTE we could just do this in DrawGizzmo
+		markers = new Transform[2];
+		for ( int i = 0; i < markers.Length; i++ )
+		{
+			markers[i] = Instantiate( TEMPMarker ); // new GameObject(name+"_marker_" + i).transform;
+			markers[i].name = $"{name}-MARKER-{i}";
+			markers[i].GetComponent<SpriteRenderer>().color = agentColour;
+		}
+
 	}
 
 	private void FixedUpdate()
@@ -61,9 +80,40 @@ public class VOAgent2 : MonoBehaviour
 
 		int rayHitCount = Physics2D.CircleCastNonAlloc( transform.position, detectRadius, Vector3.zero, detectedAgents, 0, detectAgentLayerMask );
 
+
+		desiredVectorNorm = ( target.position - transform.position ).normalized;
+		float desiredAngleOffset = GetAngleFromVectors( Forwards, desiredVectorNorm );  // the angle required to be facing the target.
+
+		//DEBUGING 
+		
+		Vector3 e = transform.eulerAngles;
+		e.z += desiredAngleOffset;
+		transform.eulerAngles = e;
+		
+		if ( DEBUG )
+			print( $"{name} Angle to target: {desiredAngleOffset}" );
+
+		// EOF DEBUGING
+
 		if ( rayHitCount > 1 )
 		{
 			CalculateAvoidAgent( rayHitCount );
+
+			if ( currentAvoidAgent != null )
+			{
+
+				float agentVelocityAngle = GetAngleFromVectors( Forwards, currentAvoidAgent.Forwards );
+
+				// DEBUGING
+
+				if ( DEBUG )
+					print( $"{name}: agent vector angle {agentVelocityAngle}" );
+
+				markers[0].transform.position = currentAvoidTargets[0];
+				markers[1].transform.position = currentAvoidTargets[1];
+
+			}
+
 		}
 		else
 		{
@@ -74,6 +124,9 @@ public class VOAgent2 : MonoBehaviour
 
 			// go to target things.
 		}
+
+		if ( move )
+			transform.position = transform.position + ( Forwards * agentSpeed * Time.deltaTime );
 
 	}
 
@@ -103,22 +156,26 @@ public class VOAgent2 : MonoBehaviour
 		if ( currentAvoidAgent != null )
 		{
 
-			float dist = Vector2.Distance( transform.position, currentAvoidAgent.transform.position ) - agentRadius - currentAvoidAgent.agentRadius;
+			if ( GetAxisTimeTillAlligned( currentAvoidAgent ) < Mathf.Infinity )
+			{
 
-			// make sure its in the detect radius otherwises it will remain set when out of range.
-			if ( dist <= detectRadius )
-			{
-				closestAgent = currentAvoidAgent;
-				newAvoidDistance = distance = dist;
-			}
-			else
-			{
-				print( $"{name} Nope, {dist}" );
+				float dist = Vector2.Distance( transform.position, currentAvoidAgent.transform.position ) - agentRadius - currentAvoidAgent.agentRadius;
+
+				// make sure its in the detect radius otherwises it will remain set when out of range.
+				if ( dist <= detectRadius )
+				{
+					closestAgent = currentAvoidAgent;
+					newAvoidDistance = distance = dist;
+				}
+				else
+				{
+					print( $"{name} Nope, {dist}" );
+				}
 			}
 
 		}
 
-		for ( int i = 0; i < rayHitCount; i++ )
+		for ( int i = 0; i < Mathf.Min(rayHitCount, detectedAgents.Length); i++ )
 		{
 
 			// ignore ourself.
@@ -128,6 +185,9 @@ public class VOAgent2 : MonoBehaviour
 			VOAgent2 otherAgent = detectedAgents[i].transform.GetComponent<VOAgent2>();
 
 			if ( otherAgent == currentAvoidAgent )
+				continue;
+
+			if ( GetAxisTimeTillAlligned( otherAgent ) == Mathf.Infinity )
 				continue;
 
 			float dist = Vector2.Distance( transform.position, otherAgent.transform.position ) - agentRadius - otherAgent.agentRadius;
@@ -157,6 +217,55 @@ public class VOAgent2 : MonoBehaviour
 		currentAvoidAgent = closestAgent;
 		currentAvoidAgentDistance = distance;
 
+		// update the possible targets
+		if ( currentAvoidAgent != null )
+		{
+			
+			Vector3 desiredPerend = Vector2.Perpendicular( desiredVectorNorm ).normalized;
+
+			currentAvoidTargets[0] = currentAvoidAgent.transform.position - desiredPerend * ( agentRadius + currentAvoidAgent.agentRadius );
+			currentAvoidTargets[1] = currentAvoidAgent.transform.position + desiredPerend * ( agentRadius + currentAvoidAgent.agentRadius );
+
+		}
+
+	}
+
+	/// <summary>
+	/// Gets the shortest angle between vectA and vectB
+	/// </summary>
+	private float GetAngleFromVectors( Vector2 vectA, Vector2 vectB, bool signed=true )
+	{
+
+		return signed ? Vector2.SignedAngle( vectA, vectB ) : Vector2.Angle( vectA, vectB );
+
+	}
+
+	/// <summary>
+	/// Gets the sortest time to align along any unaligned axis in world space based on the agents current move forwards vector
+	/// If the two agents never meet, Mathf.Infinity is returned
+	/// </summary>
+	private float GetAxisTimeTillAlligned( VOAgent2 otherAgent )
+	{
+
+		// This does not take the radius into account . TODO: <<
+
+		Vector2 posDiff  = transform.position - otherAgent.transform.position;
+		Vector2 vectDiff = otherAgent.Forwards * otherAgent.agentSpeed - Forwards * agentSpeed;
+
+		Vector2 ttc = posDiff / vectDiff;
+		float out_ttc = Mathf.Min( ttc.x, ttc.y );
+
+		if ( out_ttc == 0 )
+			out_ttc = Mathf.Max( ttc.x, ttc.y );
+		
+		if (DEBUG)
+			print( $"{name} :: {posDiff} ## {vectDiff} ## {ttc} ## {out_ttc}" );
+
+		if ( out_ttc <= 0 || ttc == Vector2.zero )
+			return Mathf.Infinity;
+		else
+			return out_ttc;
+
 	}
 
 	/// <summary>
@@ -183,7 +292,14 @@ public class VOAgent2 : MonoBehaviour
 
 		Gizmos.DrawSphere( transform.position, detectRadius );
 
+		if ( target != null )
+		{
+			Gizmos.color = new Color(0,0,0, 0.25f);
+			Gizmos.DrawCube( TargetPosition, new Vector3( 0.25f, 0.25f, 0.1f ) );
 
+			Gizmos.color = new Color( 0, 0, 0, 1f );
+			Gizmos.DrawLine( TargetPosition, transform.position );
+		}
 
 	}
 
