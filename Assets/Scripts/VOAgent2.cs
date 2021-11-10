@@ -20,6 +20,7 @@ public class VOAgent2 : MonoBehaviour
 	[Header( "Agent Setup" )]
 	[SerializeField] private Color agentColour = Color.red;
 	[SerializeField] private float agentRadius = 0.5f;
+	[SerializeField] private float fov = 45f;   // degrees
 
 	[Header( "Agent Detect Setup" )]
 	private const int maxDetectAgents = 3;  // define as const so its the same for all agents. ( i could define it in VOAgentTick, so it can be changed in the inspector)
@@ -37,6 +38,11 @@ public class VOAgent2 : MonoBehaviour
 	private Vector3 TargetPosition => target != null ? target.position : Vector3.zero;
 
 	public bool DEBUG_DRAW = true;
+
+	private void Awake()
+	{
+		GetComponent<SpriteRenderer>().color = agentColour;
+	}
 
 	private void Start()
 	{
@@ -170,14 +176,14 @@ public class VOAgent2 : MonoBehaviour
 		if ( !DEBUG_DRAW )
 			return;
 
-		
-
 		if ( currentAvoidAgent == null )
 			Gizmos.color = new Color( 0, 1, 0, 0.05f );
 		else
 			Gizmos.color = new Color( 1, 0, 0, 0.05f );
 
 		Gizmos.DrawSphere( transform.position, detectRadius );
+
+
 
 	}
 

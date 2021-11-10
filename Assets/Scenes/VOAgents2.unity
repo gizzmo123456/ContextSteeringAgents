@@ -566,7 +566,7 @@ MonoBehaviour:
   detectRadius: 3
   detectAgentLayerMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
   target: {fileID: 0}
   DEBUG_DRAW: 1
 --- !u!58 &1278166037
@@ -873,7 +873,7 @@ MonoBehaviour:
   detectRadius: 3
   detectAgentLayerMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
   target: {fileID: 0}
   DEBUG_DRAW: 1
 --- !u!58 &1468456988
@@ -1098,7 +1098,7 @@ MonoBehaviour:
   detectRadius: 3
   detectAgentLayerMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
   target: {fileID: 0}
   DEBUG_DRAW: 1
 --- !u!50 &2023724062
