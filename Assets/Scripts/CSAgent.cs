@@ -120,6 +120,9 @@ public class CSAgent : MonoBehaviour
 				float danagerValue = 1f - dist / agent_avoidMaxRange;
 
 				SetMapSlot( ref map_danager, map_damSlotID, 2, danagerValue );
+				
+				MaskDanagerMap();
+
 
 				// do avoid things
 				if ( DEBUG )
@@ -182,13 +185,44 @@ public class CSAgent : MonoBehaviour
 
 	}
 
+	private void MaskDanagerMap()
+	{
+
+		// Find the lowest danager value and mask the rest.
+
+		float lowestValue = 9999;
+		float lowestStartIdx = -1;	// remember the lowest start index so we can mask the values that come before.
+
+		for ( int i = 0; i < cm_slots; i++ )
+		{
+			if ( map_danager[i] < lowestValue )
+			{
+				lowestValue = map_danager[i];
+				lowestStartIdx = i;
+			}
+			else if ( map_danager[i] > lowestValue )
+			{	
+				// mask values above the lowest
+				map_danager[i] = -1;
+			}
+
+		}
+
+		// mask all values that come befor the lowest value.
+		for ( int i = 0; i < lowestStartIdx; i++ )
+		{
+			map_danager[i] = -1;
+		}
+
+	}
+
 	private void ClearMaps()
 	{
 
 		for ( int i = 0; i < cm_slots; i++ )
 		{
-			map_danager[i]  = -1;
-			map_intress[i] = -1;
+			map_danager[i] = 0;
+			map_intress[i] = 0;
 		}
 
 	}
@@ -223,8 +257,12 @@ public class CSAgent : MonoBehaviour
 	private int GetMapSlotID( Vector3 objectPosition )
 	{
 		float map_angle = Get360AngleFromVectors( map_keyStartVector, ( objectPosition - transform.position ).normalized );
+		int id = Round( map_angle / ( 360 / cm_slots ) );
 
-		return Round( map_angle / ( 360 / cm_slots ) );
+		if ( id == cm_slots )
+			id = 0;
+
+		return id;
 
 	}
 
