@@ -870,22 +870,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 1468456986}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3355a2fbe4c5fee4e8c0adb113d8678a, type: 3}
+  m_Script: {fileID: 11500000, guid: 9b602aac33060964080faddcc936c14a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  agentColour: {r: 1, g: 0, b: 0, a: 1}
-  agentRadius: 0.5
-  agentSpeed: 5
-  fov: 45
-  detectRadius: 3
-  detectAgentLayerMask:
-    serializedVersion: 2
-    m_Bits: 64
+  agent_colour: {r: 1, g: 0, b: 0, a: 1}
+  agent_moveSpeed: 2
+  agent_radius: 0.5
+  anget_avoidDistance: 0
+  detect_radius: 3
   target: {fileID: 1009485515}
   DEBUG: 0
-  DEBUG_DRAW: 1
-  move: 0
-  TEMPMarker: {fileID: 1304053368}
 --- !u!58 &1468456988
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -1100,22 +1094,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 2023724060}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3355a2fbe4c5fee4e8c0adb113d8678a, type: 3}
+  m_Script: {fileID: 11500000, guid: 9b602aac33060964080faddcc936c14a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  agentColour: {r: 1, g: 0, b: 0, a: 1}
-  agentRadius: 0.5
-  agentSpeed: 5
-  fov: 45
-  detectRadius: 3
-  detectAgentLayerMask:
-    serializedVersion: 2
-    m_Bits: 64
+  agent_colour: {r: 1, g: 0, b: 0, a: 1}
+  agent_moveSpeed: 2
+  agent_radius: 0.5
+  anget_avoidDistance: 0
+  detect_radius: 3
   target: {fileID: 352359791}
-  DEBUG: 1
-  DEBUG_DRAW: 1
-  move: 0
-  TEMPMarker: {fileID: 1304053368}
+  DEBUG: 0
 --- !u!50 &2023724062
 Rigidbody2D:
   serializedVersion: 4
