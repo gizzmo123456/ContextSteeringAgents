@@ -53,8 +53,9 @@ public class CSAgent : MonoBehaviour
 	[SerializeField] private Color agent_colour;
 	[SerializeField] private float agent_moveSpeed = 5f; // units per second
 	[SerializeField] private float agent_radius = 0.5f;
-	[SerializeField] private float anget_avoidDistance = 0;
-	private float agent_avoidDistance => agent_radius + anget_avoidDistance;
+	[SerializeField] private float agent_avoidRadius = 0; // the amount of distance that we should maintain between agents.
+	[SerializeField] private float agent_avoidMaxRange = 2;	// this should be above 0 and not exceed the detect radius 
+	private float agent_avoidDistance => agent_radius + agent_avoidRadius;
 
 	[Header( "Obstacle detection" )]
 	const int detect_objectCount = 3;
@@ -63,17 +64,23 @@ public class CSAgent : MonoBehaviour
 
 	// context maps.
 	// a value of -1 (or <0) is masked out
-	private float[] danageMap  = new float[ cm_slots ];
-    private float[] intressMap = new float[ cm_slots ];
+	private Vector2 map_keyStartVector = Vector2.up;
+	private float[] map_danager  = new float[ cm_slots ];
+    private float[] map_intress = new float[ cm_slots ];
 
 	[Header( "target" )]
 	[SerializeField] private Transform target;
+
+
+	// DEBUGING
+	public bool DEBUG = false;
+	public bool DEBUG_PRINT_MAP = false;
 
 	private void Awake()
 	{
 
 		GetComponent<SpriteRenderer>().color = agent_colour;
-		transform.localScale = new Vector3( agent_radius, agent_radius, 1f );
+		transform.localScale = new Vector3( agent_radius*2f, agent_radius*2f, 1f );
 
 	}
 
@@ -90,9 +97,36 @@ public class CSAgent : MonoBehaviour
 		// fire our ray into the scene to find if any objects are near
 		int rayHits = Physics2D.CircleCastNonAlloc( transform.position, detect_radius, Vector2.zero, detect_hits );
 
+		// Set the intress map (We only have 1 desternation atm.)
+		int map_intrSlotId = GetMapSlotID( target.position );
+		SetMapSlot( ref map_intress, map_intrSlotId, cm_slots/2, 1 );
+
+
 		if ( rayHits > 1 )
 		{
-			// do avoid things
+
+			for ( int i = 0; i < rayHits; i++ )
+			{
+				RaycastHit2D hit = detect_hits[i];
+
+				CSAgent otherAgent = hit.transform.GetComponent<CSAgent>();
+				Transform otherAgentTrans = hit.transform;
+
+				if ( otherAgentTrans == transform )
+					continue;
+				
+				int map_damSlotID = GetMapSlotID( otherAgentTrans.position );
+				float dist = Vector2.Distance( transform.position, otherAgentTrans.position ) - agent_avoidDistance - otherAgent.agent_avoidDistance;
+				float danagerValue = 1f - dist / agent_avoidMaxRange;
+
+				SetMapSlot( ref map_danager, map_damSlotID, 2, danagerValue );
+
+				// do avoid things
+				if ( DEBUG )
+					print( $"{name} :: { map_damSlotID } :: {dist} :: {danagerValue}" );
+				
+			}
+
 		}
 		else
 		{
@@ -100,6 +134,8 @@ public class CSAgent : MonoBehaviour
 			RotateDelta( GetAngleFromVectors(Forwards, (target.position - transform.position).normalized) );
 			Move( agent_moveSpeed );
 		}
+
+		PrintMaps();
 	}
 
 	private void Move( float moveSpeed)
@@ -112,13 +148,47 @@ public class CSAgent : MonoBehaviour
 		transform.eulerAngles = transform.eulerAngles + new Vector3( 0, 0, rotateDelta );
 	}
 
+	private void SetMapSlot( ref float[] map, int slotID, int rolloffSlots, float value )
+	{
+
+		rolloffSlots++; // add on so we get at least 'rolloffSlots' above 0
+
+		if ( value > map[slotID] )
+			map[slotID] = value;
+		
+		// compute the rolloff values.
+		for ( int i = 1; i <= rolloffSlots; i++ )
+		{
+			int rhs = slotID + i;
+			int lhs = slotID - i;
+
+			if ( rhs >= cm_slots )
+				rhs -= cm_slots;
+
+			if ( lhs < 0 )
+				lhs += cm_slots;
+
+			float valueMultiplier = 1f - (float)i / (float)rolloffSlots;
+			float val = value * valueMultiplier;
+
+			if ( val > map[rhs] )
+				map[rhs] = val;
+
+			if ( val > map[lhs] )
+				map[lhs] = val;
+
+		}
+		
+
+	}
+
 	private void ClearMaps()
 	{
 
 		for ( int i = 0; i < cm_slots; i++ )
 		{
-			danageMap[i]  = -1;
-			intressMap[i] = -1;
+			map_danager[i]  = -1;
+			map_intress[i] = -1;
 		}
 
 	}
@@ -134,4 +204,50 @@ public class CSAgent : MonoBehaviour
 
 	}
 
+	private float Get360AngleFromVectors( Vector2 vectA, Vector2 vectB )
+	{
+		float angle = GetAngleFromVectors( vectA, vectB );
+
+		return angle >= 0 ? angle : 360 + angle;
+	}
+
+	/// <summary>
+	/// Rounds half up
+	/// </summary>
+	/// <returns></returns>
+	private int Round( float value )
+	{
+		return value % 1 < 0.5f ? Mathf.FloorToInt( value ) : Mathf.CeilToInt( value );
+	}
+
+	private int GetMapSlotID( Vector3 objectPosition )
+	{
+		float map_angle = Get360AngleFromVectors( map_keyStartVector, ( objectPosition - transform.position ).normalized );
+
+		return Round( map_angle / ( 360 / cm_slots ) );
+
+	}
+
+	// Debuging
+
+	private void PrintMaps()
+	{
+
+		if ( !DEBUG_PRINT_MAP )
+			return;
+
+		string intrStr = "| ";
+		string danStr = "|";
+
+		for ( int i = 0; i < cm_slots; i++ )
+		{
+			intrStr += map_intress[i] + " | ";
+			danStr += map_danager[i] + " | ";
+		}
+
+		print( $"Intresst Map: {intrStr}" );
+		print( $"Danager Map: {danStr}" );
+
+		DEBUG_PRINT_MAP = false;
+	}
 }
