@@ -90,7 +90,7 @@ public class CSAgent : MonoBehaviour
 		// fire our ray into the scene to find if any objects are near
 		int rayHits = Physics2D.CircleCastNonAlloc( transform.position, detect_radius, Vector2.zero, detect_hits );
 
-		if ( rayHits > 111 )
+		if ( rayHits > 1 )
 		{
 			// do avoid things
 		}
@@ -104,7 +104,7 @@ public class CSAgent : MonoBehaviour
 
 	private void Move( float moveSpeed)
 	{
-		transform.position = transform.position + Forwards * moveSpeed;
+		transform.position = transform.position + Forwards * moveSpeed * Time.deltaTime;
 	}
 
 	private void RotateDelta( float rotateDelta )
