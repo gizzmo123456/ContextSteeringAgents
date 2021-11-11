@@ -122,7 +122,10 @@ public class CSAgent : MonoBehaviour
 				SetMapSlot( ref map_danager, map_damSlotID, 2, danagerValue );
 				
 				MaskDanagerMap();
+				int moveTo_slotID = ApplyDanagerMask();
 
+				if ( DEBUG_PRINT_MAP )
+					print( $"{name} :: move to slot id -> {moveTo_slotID}" );
 
 				// do avoid things
 				if ( DEBUG )
@@ -185,10 +188,11 @@ public class CSAgent : MonoBehaviour
 
 	}
 
+	/// <summary>
+	/// Find the lowest danager value and mask the rest (with -1).
+	/// </summary>
 	private void MaskDanagerMap()
 	{
-
-		// Find the lowest danager value and mask the rest.
 
 		float lowestValue = 9999;
 		float lowestStartIdx = -1;	// remember the lowest start index so we can mask the values that come before.
@@ -213,6 +217,32 @@ public class CSAgent : MonoBehaviour
 		{
 			map_danager[i] = -1;
 		}
+
+	}
+
+
+	/// <summary>
+	/// Apply the damager mask and return the highest slot id
+	/// </summary>
+	private int ApplyDanagerMask()
+	{
+
+		float highestValue = -1;
+		int highestSlotID = -1;
+
+		for ( int i = 0; i < cm_slots; i++ )
+		{
+			if ( map_danager[i] == -1 )
+				map_intress[i] = -1;
+
+			if ( map_intress[i] > highestValue )
+			{
+				highestValue = map_intress[i];
+				highestSlotID = i;
+			}
+		}
+
+		return highestSlotID;
 
 	}
 
