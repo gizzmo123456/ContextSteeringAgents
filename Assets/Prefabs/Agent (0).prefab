@@ -171,7 +171,7 @@ MonoBehaviour:
   agent_radius: 0.5
   agent_avoidRadius: -0.25
   agent_avoidMaxRange: 2
-  detect_radius: 3
+  detect_radius: 4
   target: {fileID: 0}
   DEBUG: 0
   DEBUG_PRINT_MAP: 0

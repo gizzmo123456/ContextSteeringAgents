@@ -1575,7 +1575,7 @@ MonoBehaviour:
   - {fileID: 1458244587}
   - {fileID: 1051502012}
   col: {r: 0, g: 0, b: 1, a: 1}
-  maxSpawn: 250
+  maxSpawn: 200
 --- !u!4 &1097803003
 Transform:
   m_ObjectHideFlags: 0
@@ -1857,7 +1857,7 @@ MonoBehaviour:
   - {fileID: 1458244587}
   - {fileID: 1051502012}
   col: {r: 0, g: 1, b: 0, a: 1}
-  maxSpawn: 250
+  maxSpawn: 200
 --- !u!4 &1394482892
 Transform:
   m_ObjectHideFlags: 0
@@ -2057,7 +2057,7 @@ MonoBehaviour:
   - {fileID: 1458244587}
   - {fileID: 1051502012}
   col: {r: 1, g: 0, b: 0.987288, a: 1}
-  maxSpawn: 250
+  maxSpawn: 200
 --- !u!4 &1523461663
 Transform:
   m_ObjectHideFlags: 0
@@ -2288,7 +2288,7 @@ MonoBehaviour:
   - {fileID: 636068803}
   - {fileID: 176203651}
   col: {r: 1, g: 0, b: 0, a: 1}
-  maxSpawn: 250
+  maxSpawn: 200
 --- !u!4 &1621797142
 Transform:
   m_ObjectHideFlags: 0

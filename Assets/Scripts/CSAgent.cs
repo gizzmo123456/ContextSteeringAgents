@@ -132,15 +132,16 @@ public class CSAgent : MonoBehaviour
 			}
 
 			MaskDanagerMap();
-			int moveTo_slotID = ApplyDanagerMask();
+			int moveTo_slotID = MaskIntrestMap();
+			float moveTo_heading = GetIntressGradentSlot( moveTo_slotID, 2 );
 
 			if ( DEBUG )
-				print( $"{moveTo_slotID} Slot move to id: " + moveTo_slotID );
+				print( $"{moveTo_slotID} Slot move to id: {moveTo_slotID} -> {moveTo_heading}" );
 
 			if ( DEBUG_PRINT_MAP )
 				print( $"{name} :: move to slot id -> {moveTo_slotID} = {moveTo_slotID * ( 360f / cm_slots )}" );
 
-			transform.eulerAngles = new Vector3( 0, 0, moveTo_slotID * ( 360f / cm_slots ) );
+			transform.eulerAngles = new Vector3( 0, 0, moveTo_heading * ( 360f / cm_slots ) );
 			Move( agent_moveSpeed );
 
 		}
@@ -239,9 +240,9 @@ public class CSAgent : MonoBehaviour
 
 
 	/// <summary>
-	/// Apply the damager mask and return the highest slot id
+	/// Applies the damager mask and return the highest slot id
 	/// </summary>
-	private int ApplyDanagerMask()
+	private int MaskIntrestMap()
 	{
 
 		float highestValue = -1;
@@ -262,6 +263,64 @@ public class CSAgent : MonoBehaviour
 		}
 
 		return highestSlotID;
+
+	}
+
+	/// <summary>
+	/// Finds the gradent value either side of slotId and returns the modified slotID where the two gradents meet.
+	/// </summary>
+	private float GetIntressGradentSlot( int slotId, int slots, float valueRange=1)
+	{
+
+		float sum = 0;
+		float count = 0;
+
+		bool  lhsCounting = true;
+		bool  rhsCounting = true;
+
+		for ( int i = 1; i <= slots; i++ )
+		{
+
+			int lhs = i - 1;
+			int rhs = i + 1;
+
+			if ( lhs < 0 )
+				lhs += cm_slots;
+
+			if ( rhs >= cm_slots )
+				rhs -= cm_slots;
+
+			if ( map_intress[lhs] <= 0)
+			{
+				lhsCounting = false;
+			}
+			else if ( lhsCounting )
+			{
+				sum -= map_intress[lhs];
+				count++;
+			}
+
+			if ( map_intress[rhs] <= 0 )
+			{
+				rhsCounting = false;
+			}
+			else if ( rhsCounting )
+			{
+				sum += map_intress[rhs];
+				count++;
+			}
+
+			if ( !lhsCounting && !rhsCounting )
+				break;
+
+		}
+
+		if ( count == 0 )
+			return slotId;
+
+		float avg = sum / count;
+
+		return slotId + avg / valueRange;
 
 	}
 
