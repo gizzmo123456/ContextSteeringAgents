@@ -603,7 +603,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0.6415094, g: 0.6415094, b: 0.6415094, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -620,7 +620,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 80
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -644,7 +644,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 94.7, y: 33.7, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -1416,7 +1416,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1009485514}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.25, y: -5, z: 0}
+  m_LocalPosition: {x: -17.5, y: -26.8, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -1532,7 +1532,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1051502009}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 151.5, y: -40.4, z: 0}
+  m_LocalPosition: {x: 192, y: -19.9, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -1568,43 +1568,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   agentPrefab: {fileID: 8929337782366633157, guid: ed91c0a1923219644b41006e73bc68f0, type: 3}
-  time: 0.5
+  time: 0.333
   targets:
   - {fileID: 1009485515}
   - {fileID: 1952457757}
   - {fileID: 1458244587}
   - {fileID: 1051502012}
-  - {fileID: 622738759}
-  - {fileID: 1155520731}
-  - {fileID: 374477093}
-  - {fileID: 1599761046}
-  - {fileID: 1546275131}
-  - {fileID: 900619123}
-  - {fileID: 1897221006}
-  - {fileID: 1696090484}
-  - {fileID: 681493716}
-  - {fileID: 2023976077}
-  - {fileID: 280503334}
-  - {fileID: 1727206245}
-  - {fileID: 768568103}
-  - {fileID: 926043608}
-  - {fileID: 151260373}
-  - {fileID: 700134798}
-  - {fileID: 1504027037}
-  - {fileID: 848934361}
-  - {fileID: 513783957}
-  - {fileID: 1781640324}
-  - {fileID: 2013349390}
-  - {fileID: 1241677916}
-  - {fileID: 107253131}
-  - {fileID: 2074201887}
-  - {fileID: 723242702}
-  - {fileID: 2018175283}
-  - {fileID: 1785835200}
-  - {fileID: 2100119130}
-  - {fileID: 782459205}
-  - {fileID: 636068803}
-  - {fileID: 176203651}
   col: {r: 0, g: 0, b: 1, a: 1}
   maxSpawn: 250
 --- !u!4 &1097803003
@@ -1881,43 +1850,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   agentPrefab: {fileID: 8929337782366633157, guid: ed91c0a1923219644b41006e73bc68f0, type: 3}
-  time: 0.5
+  time: 0.333
   targets:
   - {fileID: 1009485515}
   - {fileID: 1952457757}
   - {fileID: 1458244587}
   - {fileID: 1051502012}
-  - {fileID: 622738759}
-  - {fileID: 1155520731}
-  - {fileID: 374477093}
-  - {fileID: 1599761046}
-  - {fileID: 1546275131}
-  - {fileID: 900619123}
-  - {fileID: 1897221006}
-  - {fileID: 1696090484}
-  - {fileID: 681493716}
-  - {fileID: 2023976077}
-  - {fileID: 280503334}
-  - {fileID: 1727206245}
-  - {fileID: 768568103}
-  - {fileID: 926043608}
-  - {fileID: 151260373}
-  - {fileID: 700134798}
-  - {fileID: 1504027037}
-  - {fileID: 848934361}
-  - {fileID: 513783957}
-  - {fileID: 1781640324}
-  - {fileID: 2013349390}
-  - {fileID: 1241677916}
-  - {fileID: 107253131}
-  - {fileID: 2074201887}
-  - {fileID: 723242702}
-  - {fileID: 2018175283}
-  - {fileID: 1785835200}
-  - {fileID: 2100119130}
-  - {fileID: 782459205}
-  - {fileID: 636068803}
-  - {fileID: 176203651}
   col: {r: 0, g: 1, b: 0, a: 1}
   maxSpawn: 250
 --- !u!4 &1394482892
@@ -2002,7 +1940,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1458244584}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 68.6, y: -40.4, z: 0}
+  m_LocalPosition: {x: 213.2, y: 93.3, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -2112,43 +2050,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   agentPrefab: {fileID: 8929337782366633157, guid: ed91c0a1923219644b41006e73bc68f0, type: 3}
-  time: 0.5
+  time: 0.333
   targets:
   - {fileID: 1009485515}
   - {fileID: 1952457757}
   - {fileID: 1458244587}
   - {fileID: 1051502012}
-  - {fileID: 622738759}
-  - {fileID: 1155520731}
-  - {fileID: 374477093}
-  - {fileID: 1599761046}
-  - {fileID: 1546275131}
-  - {fileID: 900619123}
-  - {fileID: 1897221006}
-  - {fileID: 1696090484}
-  - {fileID: 681493716}
-  - {fileID: 2023976077}
-  - {fileID: 280503334}
-  - {fileID: 1727206245}
-  - {fileID: 768568103}
-  - {fileID: 926043608}
-  - {fileID: 151260373}
-  - {fileID: 700134798}
-  - {fileID: 1504027037}
-  - {fileID: 848934361}
-  - {fileID: 513783957}
-  - {fileID: 1781640324}
-  - {fileID: 2013349390}
-  - {fileID: 1241677916}
-  - {fileID: 107253131}
-  - {fileID: 2074201887}
-  - {fileID: 723242702}
-  - {fileID: 2018175283}
-  - {fileID: 1785835200}
-  - {fileID: 2100119130}
-  - {fileID: 782459205}
-  - {fileID: 636068803}
-  - {fileID: 176203651}
   col: {r: 1, g: 0, b: 0.987288, a: 1}
   maxSpawn: 250
 --- !u!4 &1523461663
@@ -2343,7 +2250,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   agentPrefab: {fileID: 8929337782366633157, guid: ed91c0a1923219644b41006e73bc68f0, type: 3}
-  time: 0.5
+  time: 0.333
   targets:
   - {fileID: 1009485515}
   - {fileID: 1952457757}
@@ -2834,7 +2741,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1952457754}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 68.6, y: -5, z: 0}
+  m_LocalPosition: {x: -11.9, y: 79.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

@@ -167,9 +167,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   agent_colour: {r: 1, g: 0, b: 0, a: 1}
-  agent_moveSpeed: 2
+  agent_moveSpeed: 8
   agent_radius: 0.5
-  agent_avoidRadius: 0.1
+  agent_avoidRadius: -0.25
   agent_avoidMaxRange: 2
   detect_radius: 3
   target: {fileID: 0}

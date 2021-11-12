@@ -54,13 +54,13 @@ public class CSAgent : MonoBehaviour
 	[SerializeField] private float agent_moveSpeed = 5f; // units per second
 	[SerializeField] private float agent_radius = 0.5f;
 	[SerializeField] private float agent_avoidRadius = 0; // the amount of distance that we should maintain between agents.
-	[SerializeField] private float agent_avoidMaxRange = 2;	// this should be above 0 and not exceed the detect radius 
+	[SerializeField] private float agent_avoidMaxRange = 4;	// this should be above 0 and not exceed the detect radius 
 	private float agent_avoidDistance => agent_radius + agent_avoidRadius;
 
 	[Header( "Obstacle detection" )]
-	const int detect_objectCount = 3;
+	const int detect_objectCount = 6;
 	[SerializeField] private RaycastHit2D[] detect_hits = new RaycastHit2D[ detect_objectCount + 1 ];   // +1 since we detect ourself.
-	[SerializeField] private float detect_radius = 3;
+	[SerializeField] private float detect_radius = 5;
 
 	// context maps.
 	// a value of -1 (or <0) is masked out
@@ -93,7 +93,7 @@ public class CSAgent : MonoBehaviour
 	{
 
 		// TEMP
-		if ( Vector2.Distance( transform.position, target.position ) < 0.5f )
+		if ( Vector2.Distance( transform.position, target.position ) < 10f )
 			target = AgentSpawn.GetTraget();
 
 		ClearMaps();
@@ -126,13 +126,16 @@ public class CSAgent : MonoBehaviour
 				SetMapSlot( ref map_danager, map_damSlotID, 2, danagerValue );
 				
 				// do avoid things
-				//if ( DEBUG )
-				//	print( $"{name} :: { map_damSlotID } :: {dist} :: {danagerValue}" );
+				if ( DEBUG )
+					print( $"{name} :: { map_damSlotID } :: {dist} :: {danagerValue}" );
 				
 			}
 
 			MaskDanagerMap();
 			int moveTo_slotID = ApplyDanagerMask();
+
+			if ( DEBUG )
+				print( $"{moveTo_slotID} Slot move to id: " + moveTo_slotID );
 
 			if ( DEBUG_PRINT_MAP )
 				print( $"{name} :: move to slot id -> {moveTo_slotID} = {moveTo_slotID * ( 360f / cm_slots )}" );
@@ -226,8 +229,6 @@ public class CSAgent : MonoBehaviour
 		for ( int i = 0; i < lowestStartIdx; i++ )
 		{
 			map_danager[i] = -1;
-			if ( DEBUG )
-				print( i + " :: " + lowestValue );
 		}
 
 		if ( DEBUG )
@@ -248,6 +249,7 @@ public class CSAgent : MonoBehaviour
 
 		for ( int i = 0; i < cm_slots; i++ )
 		{
+			
 			if ( map_danager[i] == -1 )
 				map_intress[i] = -1;
 
@@ -256,6 +258,7 @@ public class CSAgent : MonoBehaviour
 				highestValue = map_intress[i];
 				highestSlotID = i;
 			}
+
 		}
 
 		return highestSlotID;
@@ -303,7 +306,7 @@ public class CSAgent : MonoBehaviour
 	private int GetMapSlotID( Vector3 objectPosition )
 	{
 		float map_angle = Get360AngleFromVectors( map_keyStartVector, ( objectPosition - transform.position ).normalized );
-		int id = Round( map_angle / ( 360 / cm_slots ) );
+		int id = Round( map_angle / ( 360F / cm_slots ) );
 
 		if ( id == cm_slots )
 			id = 0;
