@@ -50,7 +50,7 @@ public class CSAgent : MonoBehaviour
 	
 
 	[Header( "Agent" )]
-	[SerializeField] private Color agent_colour;
+	public Color agent_colour;
 	[SerializeField] private float agent_moveSpeed = 5f; // units per second
 	[SerializeField] private float agent_radius = 0.5f;
 	[SerializeField] private float agent_avoidRadius = 0; // the amount of distance that we should maintain between agents.
@@ -69,7 +69,7 @@ public class CSAgent : MonoBehaviour
     private float[] map_intress = new float[ cm_slots ];
 
 	[Header( "target" )]
-	[SerializeField] private Transform target;
+	public Transform target;
 
 
 	// DEBUGING
@@ -91,7 +91,11 @@ public class CSAgent : MonoBehaviour
 
 	private void FixedUpdate()
 	{
-	
+
+		// TEMP
+		if ( Vector2.Distance( transform.position, target.position ) < 0.5f )
+			target = AgentSpawn.GetTraget();
+
 		ClearMaps();
 
 		// fire our ray into the scene to find if any objects are near
@@ -121,17 +125,20 @@ public class CSAgent : MonoBehaviour
 
 				SetMapSlot( ref map_danager, map_damSlotID, 2, danagerValue );
 				
-				MaskDanagerMap();
-				int moveTo_slotID = ApplyDanagerMask();
-
-				if ( DEBUG_PRINT_MAP )
-					print( $"{name} :: move to slot id -> {moveTo_slotID}" );
-
 				// do avoid things
-				if ( DEBUG )
-					print( $"{name} :: { map_damSlotID } :: {dist} :: {danagerValue}" );
+				//if ( DEBUG )
+				//	print( $"{name} :: { map_damSlotID } :: {dist} :: {danagerValue}" );
 				
 			}
+
+			MaskDanagerMap();
+			int moveTo_slotID = ApplyDanagerMask();
+
+			if ( DEBUG_PRINT_MAP )
+				print( $"{name} :: move to slot id -> {moveTo_slotID} = {moveTo_slotID * ( 360f / cm_slots )}" );
+
+			transform.eulerAngles = new Vector3( 0, 0, moveTo_slotID * ( 360f / cm_slots ) );
+			Move( agent_moveSpeed );
 
 		}
 		else
@@ -195,7 +202,10 @@ public class CSAgent : MonoBehaviour
 	{
 
 		float lowestValue = 9999;
-		float lowestStartIdx = -1;	// remember the lowest start index so we can mask the values that come before.
+		float lowestStartIdx = -1;  // remember the lowest start index so we can mask the values that come before.
+
+		if ( DEBUG )
+			PrintDanagerMap( "Pre" );
 
 		for ( int i = 0; i < cm_slots; i++ )
 		{
@@ -216,7 +226,13 @@ public class CSAgent : MonoBehaviour
 		for ( int i = 0; i < lowestStartIdx; i++ )
 		{
 			map_danager[i] = -1;
+			if ( DEBUG )
+				print( i + " :: " + lowestValue );
 		}
+
+		if ( DEBUG )
+			PrintDanagerMap( "Post" );
+
 
 	}
 
@@ -317,5 +333,19 @@ public class CSAgent : MonoBehaviour
 		print( $"Danager Map: {danStr}" );
 
 		DEBUG_PRINT_MAP = false;
+	}
+
+	private void PrintDanagerMap( string msg )
+	{
+
+		string danStr = "|";
+
+		for ( int i = 0; i < cm_slots; i++ )
+		{
+			danStr += map_danager[i] + " | ";
+		}
+
+		print( $"{name} :: {msg} Danager Map: {danStr}" );
+
 	}
 }
