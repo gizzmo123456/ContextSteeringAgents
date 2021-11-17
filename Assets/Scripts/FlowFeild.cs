@@ -66,9 +66,21 @@ public class FlowFeild : MonoBehaviour
             for ( int x = 0; x < area.x; x++ )
             {
                 int id = y * area.x + x;
+                cells[ id ] = new CellScore();
+
+                // find if theres an object in the cell.
+                int hits = Physics2D.BoxCastNonAlloc( new Vector2( x, y ), Vector2.one * rayCellSize, 0, Vector2.zero, rayHit );
+
+                if ( hits > 0 )
+                {
+                    cells[ id ].blocked = true;
+                    explored[ id ] = true;
+                    continue;
+                }
+                
 
                 explored[ id ] = false;
-                cells[ id ] = new CellScore();
+                
 
                 if ( startCell.x != x || startCell.y != y )
                     cells[id].Init( new Vector2( x, y ), int.MaxValue );
@@ -90,8 +102,6 @@ public class FlowFeild : MonoBehaviour
         while( currentCell != null )
         {
 
-            print( currentId );
-
             // get the ajcent cells
             for ( int x = -1; x < 2; x++ )
             {
@@ -107,9 +117,10 @@ public class FlowFeild : MonoBehaviour
 
                     int cellId = ((int)currentCell.position.y + y) * area.x + ((int)currentCell.position.x + x);
 
-                    float ajcentCellScore = currentCell.score + ( (x == 0 || y == 0) ? 1f : 1.5f );
+                    if ( cells[cellId].blocked )
+                        continue;
 
-                    print( $" { currentId } {ajcentCellScore} " );
+                    float ajcentCellScore = currentCell.score + ( (x == 0 || y == 0) ? 1f : 1.5f );
 
                     if ( ajcentCellScore < cells[cellId].score )
                         cells[cellId].Update( currentCell.position, ajcentCellScore );
@@ -180,9 +191,40 @@ public class FlowFeild : MonoBehaviour
         return (lowestId, lowest);
 	}
 
+    /// <summary>
+    /// Returns true if agents cell is not blocked by an obstacle
+    /// </summary>
+    /// <param name="worldPosition"></param>
+    /// <param name="directionVector"></param>
+    /// <returns></returns>
+    public bool GetFlowFeildDirectionVector( Vector3 worldPosition, out Vector2 directionVector )
+    {
+
+        // round the world position to the nearest cell. 
+        // the center of the cell is at .0
+        if ( worldPosition.x % 1f >= 0.5f )
+            worldPosition.x = Mathf.Ceil( worldPosition.x );
+        else
+            worldPosition.x = Mathf.Floor( worldPosition.x );
+
+        if ( worldPosition.y % 1f >= 0.5f )
+            worldPosition.y = Mathf.Ceil( worldPosition.y );
+        else
+            worldPosition.y = Mathf.Floor( worldPosition.y );
+
+
+        int cellId = (int)worldPosition.y * area.x + (int)worldPosition.x;
+
+        directionVector = flowFeild[cellId].direction;
+
+        return !flowFeild[cellId].blocked;
+
+    }
+
     class CellScore
     {
 
+        public bool blocked = false;
         public Vector2 position;
         public Vector2 cloestCell;
         public float score;
