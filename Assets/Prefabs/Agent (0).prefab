@@ -169,9 +169,9 @@ MonoBehaviour:
   agent_colour: {r: 1, g: 0, b: 0, a: 1}
   agent_moveSpeed: 8
   agent_radius: 0.5
-  agent_avoidRadius: -0.25
+  agent_avoidRadius: 0.25
   agent_avoidMaxRange: 2
-  detect_radius: 4
+  detect_radius: 3
   target: {fileID: 0}
   DEBUG: 0
   DEBUG_PRINT_MAP: 0

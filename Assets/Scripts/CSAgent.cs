@@ -25,17 +25,17 @@ using UnityEngine;
  * While the Danage behaviour prefers targets further away (lower score) and wants 
  * to keep a minimal distance. (Any objects beond the min distance can be ignored.)
  * 
- * Each agent should have it own danage and intress map, which should be combined using
- * the max values. However whats the point we should set the values into a the map if 
- * it a better (higher) score
+ * In Pro Game AI 3 (book) it sugest that each target or detected object shoud have its
+ * own damage or intresst map respectivly. Which are then combine using the max values.
+ * However, whats the point, when we can just test if the new value is higher than the last.
  * 
  * Apprently suming or averaging doent imporve it.
  * 
  * Once we have the final danage and intresst maps,
  * We find the lowest danage value and mask out higher values.
- * We then take the mask and apply it the intress maps, zeroing out the values.
+ * We then take the mask and apply it to the intress maps, zeroing out the masked values.
  * We then find the higest remaing value for the intress map and move in that direction.
- * [I wonder what happens if we subtract the danage from the intress]
+ * 
  */
 
 public class CSAgent : MonoBehaviour
@@ -92,10 +92,11 @@ public class CSAgent : MonoBehaviour
 	private void FixedUpdate()
 	{
 
-		// TEMP
-		if ( Vector2.Distance( transform.position, target.position ) < 10f )
+		// TEMP (change target if close)
+		if ( Vector2.Distance( transform.position, target.position ) < 20f )
 			target = AgentSpawn.GetTraget();
 
+		// ..
 		ClearMaps();
 
 		// fire our ray into the scene to find if any objects are near
@@ -113,30 +114,24 @@ public class CSAgent : MonoBehaviour
 			{
 				RaycastHit2D hit = detect_hits[i];
 
-				CSAgent otherAgent = hit.transform.GetComponent<CSAgent>();
-				Transform otherAgentTrans = hit.transform;
-
-				if ( otherAgentTrans == transform )
+				if ( hit.transform == transform )
 					continue;
-				
-				int map_damSlotID = GetMapSlotID( otherAgentTrans.position );
-				float dist = Vector2.Distance( transform.position, otherAgentTrans.position ) - agent_avoidDistance - otherAgent.agent_avoidDistance;
-				float danagerValue = 1f - dist / agent_avoidMaxRange;
 
-				SetMapSlot( ref map_danager, map_damSlotID, 2, danagerValue );
-				
-				// do avoid things
-				if ( DEBUG )
-					print( $"{name} :: { map_damSlotID } :: {dist} :: {danagerValue}" );
-				
-			}
+				CSAgent otherAgent = hit.transform.GetComponent<CSAgent>();
+
+				if ( otherAgent != null ) // avoid agents.
+					AvoidObject( otherAgent.transform.position, agent_avoidDistance + otherAgent.agent_avoidDistance, "Agent" );
+				else // avoid static objects
+					AvoidObject( hit.point, agent_avoidDistance*2f, "Obs" );	// this does not really work for large objects
+
+			} 
 
 			MaskDanagerMap();
 			int moveTo_slotID = MaskIntrestMap();
 			float moveTo_heading = GetIntressGradentSlot( moveTo_slotID, 2 );
 
-			if ( DEBUG )
-				print( $"{moveTo_slotID} Slot move to id: {moveTo_slotID} -> {moveTo_heading}" );
+			//if ( DEBUG )
+			//	print( $"{moveTo_slotID} Slot move to id: {moveTo_slotID} -> {moveTo_heading}" );
 
 			if ( DEBUG_PRINT_MAP )
 				print( $"{name} :: move to slot id -> {moveTo_slotID} = {moveTo_slotID * ( 360f / cm_slots )}" );
@@ -153,6 +148,20 @@ public class CSAgent : MonoBehaviour
 		}
 
 		PrintMaps();
+	}
+
+	private void AvoidObject( Vector3 avoidPosition, float avoidDistance, string debugName="NONE")
+	{
+
+		int map_damSlotID = GetMapSlotID( avoidPosition );
+		float dist = Vector2.Distance( transform.position, avoidPosition ) - avoidDistance;
+		float danagerValue = 1f - dist / agent_avoidMaxRange;
+
+		SetMapSlot( ref map_danager, map_damSlotID, 2, danagerValue );
+
+		if ( DEBUG )
+			print( $"{name} -> {debugName} :: { map_damSlotID } :: {dist} :: {danagerValue}" );
+
 	}
 
 	private void Move( float moveSpeed)
