@@ -114,7 +114,7 @@ public class CSAgent : MonoBehaviour
 
 	[Header( "target" )]
 	public Transform target;
-
+	protected virtual Vector3 TargetPosition => target.position;
 
 	// DEBUGING
 	public bool DEBUG = false;
@@ -136,9 +136,7 @@ public class CSAgent : MonoBehaviour
 	private void FixedUpdate()
 	{
 
-		// TEMP (change target if close)
-		if ( Vector2.Distance( transform.position, target.position ) < 10f )
-			target = AgentSpawn.GetTraget();
+		UpdateAgent();
 
 		// ..
 		ClearMaps();
@@ -147,7 +145,7 @@ public class CSAgent : MonoBehaviour
 		int rayHits = Physics2D.CircleCastNonAlloc( transform.position, detect_radius, Vector2.zero, detect_hits );
 
 		// Set the intress map (We only have 1 desternation atm.)
-		int map_intrSlotId = GetMapSlotID( target.position );
+		int map_intrSlotId = GetMapSlotID( TargetPosition );
 		SetMapSlot( ref map_intress, map_intrSlotId, cm_slots/2, 1 );
 
 
@@ -187,11 +185,18 @@ public class CSAgent : MonoBehaviour
 		else
 		{
 			// head to the target.
-			RotateDelta( GetAngleFromVectors(Forwards, (target.position - transform.position).normalized) );
+			RotateDelta( GetAngleFromVectors(Forwards, ( TargetPosition - transform.position).normalized) );
 			Move( agent_moveSpeed );
 		}
 
 		PrintMaps();
+	}
+
+	protected virtual void UpdateAgent()
+	{
+		// TEMP (change target if close)
+		if ( Vector2.Distance( transform.position, TargetPosition ) < 10f )
+			target = AgentSpawn.GetTraget();
 	}
 
 	private void AvoidObject( Vector3 avoidPosition, float avoidDistance, string debugName="NONE")
