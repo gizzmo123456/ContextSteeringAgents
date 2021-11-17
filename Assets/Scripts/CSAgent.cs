@@ -3,7 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /*
- * Context Steering Agent that utillatizes Context maps
+ * Context Steering Agent utillatizing Context maps
+ * 
+ * -------------------------------------------------
+ * Details
+ * -------------------------------------------------
+ * 
  * There are 2 context maps (1 danage and 1 intresst)
  * The context maps are 1D and represent the basic directions
  * that the agent can move in.
@@ -35,6 +40,45 @@ using UnityEngine;
  * We find the lowest danage value and mask out higher values.
  * We then take the mask and apply it to the intress maps, zeroing out the masked values.
  * We then find the higest remaing value for the intress map and move in that direction.
+ * 
+ * -------------------------------------------------
+ * Flaws and potential solutions
+ * -------------------------------------------------
+ * 
+ * This works really well to avoid other agents,
+ * However, its no so good at navagating a scene of static objects  to
+ * locate a target. Its ok with smaller objects (3x3 ish) but it  offten reaches
+ * a deadlock for larger objects (15x15). This is becase the direction of the
+ * intress target can change as it navagates around (witch is expected behaviour
+ * for a static target).
+ * 
+ * In this case we need a method to manipulate the target position or have a moving target.
+ * In F1 2014 Context streeing was used for the driver AI. In there case they mapped the 
+ * context maps to the lanes, which where positioned around a spline. The target was x% ahead
+ * of there current position along the spline.
+ * 
+ * Another approch could be to use A* whit a navGrid or navMesh to navigate the scene.
+ * The target would be the path points.
+ * 
+ * Another aproch could be to generate a flow-feild for the scene (ie. a cell based map 
+ * witch contains the direction to the target), then the target would be the agents position +
+ * the agents current cell direction. 
+ * Dijkstra’s shortest path algorithm could be a good choose for generating a flow-feild.
+ * Or A* Could also be another choose.
+ * 
+ * I think the flow-feild could make some really intressing crowed simulations. 
+ * Or somethink like 1000 agents all tring to escape a office ...
+ * 
+ * -------------------------------------------------
+ * Resources
+ * -------------------------------------------------
+ * 
+ * Context Streeing:
+ * Game AI Pro 3 - Context Steering, Behaviour-Driven Streeing, By Andrew Fray 
+ * 
+ * Flow-Feilds:
+ * Gane AI Pro - Efficient Crowd Simulation For Mobile Games, By Graham
+ * Dijkstra’s shortest path algorithm - https://www.geeksforgeeks.org/dijkstras-shortest-path-algorithm-greedy-algo-7/
  * 
  */
 
@@ -93,7 +137,7 @@ public class CSAgent : MonoBehaviour
 	{
 
 		// TEMP (change target if close)
-		if ( Vector2.Distance( transform.position, target.position ) < 20f )
+		if ( Vector2.Distance( transform.position, target.position ) < 10f )
 			target = AgentSpawn.GetTraget();
 
 		// ..
@@ -123,7 +167,7 @@ public class CSAgent : MonoBehaviour
 					AvoidObject( otherAgent.transform.position, agent_avoidDistance + otherAgent.agent_avoidDistance, "Agent" );
 				else // avoid static objects
 					AvoidObject( hit.point, agent_avoidDistance*2f, "Obs" );	// this does not really work for large objects
-
+ 
 			} 
 
 			MaskDanagerMap();
