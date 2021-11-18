@@ -120,6 +120,10 @@ public class CSAgent : MonoBehaviour
 	public Transform target;
 	protected virtual Vector3 TargetPosition => target.position;
 
+	protected float currentRotation = 0;
+	protected float targetRotation = 0;
+	protected float rotStep = 0;
+
 	// DEBUGING
 	public bool DEBUG = false;
 	public bool DEBUG_PRINT_MAP = false;
@@ -135,7 +139,7 @@ public class CSAgent : MonoBehaviour
 
 	private void Start()
 	{
-		
+		currentRotation = transform.eulerAngles.z;
 	}
 
 	private void FixedUpdate()
@@ -185,6 +189,40 @@ public class CSAgent : MonoBehaviour
 			int moveTo_slotID = MaskIntrestMap();
 			float moveTo_heading = /*moveTo_slotID; //*/ GetIntressGradentSlot( moveTo_slotID, 2 );
 
+			targetRotation = moveTo_heading * rotation_step;
+
+			// clamp our taret rot to 0-360
+			if ( targetRotation < 0 )
+				targetRotation += 360;
+			else if ( targetRotation > 360 )
+				targetRotation -= 360;
+
+			float rotUpdate = targetRotation - currentRotation;
+
+			if ( rotUpdate < 0 )
+				rotUpdate += 360;
+			else if ( rotUpdate > 360 )
+				rotUpdate -= 360;
+
+			if ( rotUpdate > 180f )
+			{
+				rotUpdate = 360 - rotUpdate;
+				currentRotation -= rotUpdate * 0.5f;
+				rotUpdate = -rotUpdate;
+			}
+			else
+			{
+				currentRotation += rotUpdate * 0.5f;
+			}
+
+			rotStep = rotUpdate;
+
+			// clamp current rot to 0-360f
+			if ( currentRotation < 0 )
+				currentRotation += 360;
+			else if ( currentRotation > 360 )
+				currentRotation -= 360;
+
 			//if ( DEBUG )
 			//	print( $"{moveTo_slotID} Slot move to id: {moveTo_slotID} -> {moveTo_heading}" );
 
@@ -193,7 +231,7 @@ public class CSAgent : MonoBehaviour
 
 			if ( !DEBUG_STOP_MOVE )
 			{
-				transform.eulerAngles = new Vector3( 0, 0, moveTo_heading * rotation_step );
+				transform.eulerAngles = new Vector3( 0, 0, currentRotation );
 				Move( agent_moveSpeed );
 			}
 			else
