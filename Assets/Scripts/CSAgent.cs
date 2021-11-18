@@ -87,10 +87,10 @@ public class CSAgent : MonoBehaviour
 
     const int cm_slotsPer90Deg = 3;
     const int cm_slots = cm_slotsPer90Deg * 4;
-	const float rotation_steps = 360f / cm_slots;
+	const float rotation_step = 360f / cm_slots;
 
-	private Vector3 Forwards => transform.up;
-	private Vector3 Right => transform.right;
+	protected Vector3 Forwards => transform.up;
+	protected Vector3 Right => transform.right;
 
 	
 
@@ -123,6 +123,7 @@ public class CSAgent : MonoBehaviour
 	// DEBUGING
 	public bool DEBUG = false;
 	public bool DEBUG_PRINT_MAP = false;
+	public bool DEBUG_STOP_MOVE = false;
 
 	private void Awake()
 	{
@@ -165,39 +166,51 @@ public class CSAgent : MonoBehaviour
 
 				CSAgent otherAgent = hit.transform.GetComponent<CSAgent>();
 
-				if ( otherAgent != null ) // avoid agents.
-					AvoidObject( otherAgent.transform.position, agent_avoidDistance + otherAgent.agent_avoidDistance, agent_avoidMaxRange, "Agent" );
+				if ( otherAgent != null ) // avoid agents. 
+					AvoidObject( otherAgent.transform.position, agent_avoidDistance + otherAgent.agent_avoidDistance, agent_avoidMaxRange, 2, "Agent" );
 				else // avoid static objects
 				{
 					Vector2 cloestPos = hit.collider.ClosestPoint( transform.position );
-					AvoidObject( cloestPos, agent_avoidDistance * 2f, agent_objectAvoidMaxRange, "Obs" );   // this does not really work for large objects
+					AvoidObject( cloestPos, agent_avoidDistance * 2f, agent_objectAvoidMaxRange, 2, "Obs" );   // this does not really work for large objects
 
 					Debug.DrawLine( cloestPos + new Vector2( -0.25f, 0 ), cloestPos + new Vector2( 0.25f, 0 ), Color.magenta, Time.deltaTime );
 					Debug.DrawLine( cloestPos + new Vector2( 0, -0.25f ), cloestPos + new Vector2( 0, 0.25f), Color.magenta, Time.deltaTime );
-					Debug.Log( "Cunt :: " + cloestPos, hit.transform );
+					if ( DEBUG )
+						Debug.Log( "Cunt :: " + cloestPos, hit.transform );
 				}
 			} 
 
 			MaskDanagerMap();
 			int moveTo_slotID = MaskIntrestMap();
-			float moveTo_heading = GetIntressGradentSlot( moveTo_slotID, 2 );
+			float moveTo_heading = /*moveTo_slotID; //*/ GetIntressGradentSlot( moveTo_slotID, 2 );
 
 			//if ( DEBUG )
 			//	print( $"{moveTo_slotID} Slot move to id: {moveTo_slotID} -> {moveTo_heading}" );
 
-			if ( DEBUG_PRINT_MAP )
-				print( $"{name} :: move to slot id -> {moveTo_slotID} = {moveTo_slotID * rotation_steps} (Gradent Heading: {moveTo_heading} = {moveTo_heading * rotation_steps})" );
+			if ( DEBUG )
+				print( $"{name} :: move to slot id -> {moveTo_slotID} = {moveTo_slotID * rotation_step} (Gradent Heading: {moveTo_heading} = {moveTo_heading * rotation_step})" );
 
-			transform.eulerAngles = new Vector3( 0, 0, moveTo_heading * rotation_steps );
+			if ( !DEBUG_STOP_MOVE )
+			{
+				transform.eulerAngles = new Vector3( 0, 0, moveTo_heading * rotation_step );
+				Move( agent_moveSpeed );
+			}
+			else
+			{
+				PRINT_DEBUG_STOP_MOVE();
+				
+			}
+		}
+		else if ( ! DEBUG_STOP_MOVE )
+		{
+			// head to the target.
+			RotateDelta( GetAngleFromVectors(Forwards, ( TargetPosition - transform.position).normalized) );
 			Move( agent_moveSpeed );
 
 		}
 		else
 		{
-			// head to the target.
-			RotateDelta( GetAngleFromVectors(Forwards, ( TargetPosition - transform.position).normalized) );
-			Move( agent_moveSpeed );
-			print( "No hit" );
+			PRINT_DEBUG_STOP_MOVE( "To Target. " );
 		}
 
 		PrintMaps();
@@ -210,14 +223,14 @@ public class CSAgent : MonoBehaviour
 			target = AgentSpawn.GetTraget();
 	}
 
-	private void AvoidObject( Vector3 avoidPosition, float avoidDistance, float maxAvoidDistance, string debugName="NONE")
+	private void AvoidObject( Vector3 avoidPosition, float avoidDistance, float maxAvoidDistance, int rollOffValues=2, string debugName="NONE")
 	{
 
 		int map_damSlotID = GetMapSlotID( avoidPosition );
 		float dist = Vector2.Distance( transform.position, avoidPosition ) - avoidDistance;
 		float danagerValue = 1f - dist / maxAvoidDistance;
 
-		SetMapSlot( ref map_danager, map_damSlotID, 4, danagerValue );
+		SetMapSlot( ref map_danager, map_damSlotID, rollOffValues, danagerValue );
 
 		if ( DEBUG )
 			print( $"{name} -> {debugName} :: { map_damSlotID } :: {dist} :: {danagerValue}" );
@@ -234,16 +247,16 @@ public class CSAgent : MonoBehaviour
 		transform.eulerAngles = transform.eulerAngles + new Vector3( 0, 0, rotateDelta );
 	}
 
-	private void SetMapSlot( ref float[] map, int slotID, int rolloffSlots, float value )
+	private void SetMapSlot( ref float[] map, int slotID, int gradientSlots, float value )
 	{
 
-		rolloffSlots++; // add on so we get at least 'rolloffSlots' above 0
+		gradientSlots++; // add on so we get at least 'rolloffSlots' above 0
 
 		if ( value > map[slotID] )
 			map[slotID] = value;
 		
 		// compute the rolloff values.
-		for ( int i = 1; i <= rolloffSlots; i++ )
+		for ( int i = 1; i <= gradientSlots; i++ )
 		{
 			int rhs = slotID + i;
 			int lhs = slotID - i;
@@ -254,7 +267,7 @@ public class CSAgent : MonoBehaviour
 			if ( lhs < 0 )
 				lhs += cm_slots;
 
-			float valueMultiplier = 1f - (float)i / (float)rolloffSlots;
+			float valueMultiplier = 1f - (float)i / (float)gradientSlots;
 			float val = value * valueMultiplier;
 
 			if ( val > map[rhs] )
@@ -320,28 +333,94 @@ public class CSAgent : MonoBehaviour
 		// we want to sellect the slot with the high value,
 		// but if there multiple slots with the highest value,
 		// we want to sellect the one cloest to our target direction.
+		float highestSlotId = -1;
 		float highestValue = -1;
-		int highestSlotID = -1;
-		int highestSlotAngle = int.MaxValue;	
+
+		List<int> highestMaskedSlotIds = new List<int>();
+		float highestMaskedValue = -1;
 
 		for ( int i = 0; i < cm_slots; i++ )
 		{
 			
-			if ( map_danager[i] == -1 )
-				map_intress[i] = -1;
-
 			if ( map_intress[i] > highestValue )
 			{
 				highestValue = map_intress[i];
-				highestSlotID = i;
+				highestSlotId = i;
+			}
+
+			if ( map_danager[i] == -1 )
+				map_intress[i] = -1;
+
+			if ( map_intress[i] > highestMaskedValue )
+			{
+
+				highestMaskedSlotIds.Clear();
+				highestMaskedSlotIds.Add( i );
+				highestMaskedValue = map_intress[i];
+
+			}
+			else if ( map_intress[i] == highestMaskedValue )
+			{
+				highestMaskedSlotIds.Add( i );
 			}
 
 		}
+		
+		
 
+		// Now we need to find witch of the highest masked values we want to go in.
+		// for this it is the highest negative value.
+		if ( highestMaskedSlotIds.Count == 1 )
+			return highestMaskedSlotIds[0];
+
+		float highestSlotIdAngle = highestSlotId * rotation_step - 180;
+		int bestMaskedSlotId = -1;
+
+		int negativeCount = 0;
+
+		float value = highestSlotIdAngle >= 0 ? float.MinValue : float.MaxValue;
+		float maxValue = float.MinValue;
+
+		string debug_str = $"hi slot angle {highestSlotIdAngle} (id: {highestSlotId}) ";
+
+		for ( int i = 0; i < highestMaskedSlotIds.Count; i++ )
+		{
+			float angle = highestMaskedSlotIds[i] * rotation_step - 180;
+			//float value = angle - highestSlotIdAngle;
+
+			if ( (highestSlotIdAngle >= 0 && Mathf.Abs( highestSlotIdAngle ) - Mathf.Abs( angle ) > value) || (highestSlotIdAngle < 0 && Mathf.Abs( highestSlotIdAngle ) - Mathf.Abs( angle ) < value) )
+			{
+				if ( DEBUG )
+					print( $"Added {highestMaskedSlotIds[i]} with {highestSlotIdAngle} >= 0 && {Mathf.Abs( highestSlotIdAngle ) - Mathf.Abs( angle )} > {value}" );
+
+				bestMaskedSlotId = highestMaskedSlotIds[i];
+				value = angle;
+				
+			}
+			/*
+			if ( value < 0 && value > highestNegativeValue )
+			{
+				highestNegativeValue = value;
+				highestMaskedSlotId = highestMaskedSlotIds[i];
+			}
+			*/
+			debug_str += $" | id: {highestMaskedSlotIds[i]} a: {angle} v: {value} ()";
+
+		}
+
+		if ( bestMaskedSlotId == -1 || DEBUG )
+		{
+			Debug.Log( $" {name} : no slot found. :: {debug_str} ", this );
+			//UnityEditor.EditorApplication.isPaused = true;
+			DEBUG = true;
+		}
+		
 		if ( DEBUG )
 			PrintIntresstMap( "post" );
 
-		return highestSlotID;
+		Mathf.Max( highestMaskedSlotIds.ToArray() );
+
+		return bestMaskedSlotId;
 
 	}
 
@@ -418,7 +497,7 @@ public class CSAgent : MonoBehaviour
 	/// <summary>
 	/// Gets the shortest angle between vectA and vectB
 	/// </summary>
-	private float GetAngleFromVectors( Vector2 vectA, Vector2 vectB, bool signed = true )
+	protected float GetAngleFromVectors( Vector2 vectA, Vector2 vectB, bool signed = true )
 	{
 
 		return signed ? Vector2.SignedAngle( vectA, vectB ) : Vector2.Angle( vectA, vectB );
@@ -444,7 +523,7 @@ public class CSAgent : MonoBehaviour
 	private int GetMapSlotID( Vector3 objectPosition )
 	{
 		float map_angle = Get360AngleFromVectors( map_keyStartVector, ( objectPosition - transform.position ).normalized );
-		int id = Round( map_angle / rotation_steps );
+		int id = Round( map_angle / rotation_step );
 
 		if ( id == cm_slots )
 			id = 0;
@@ -503,4 +582,6 @@ public class CSAgent : MonoBehaviour
 		print( $"{name} :: {msg} Intress Map: {intStr}" );
 
 	}
+
+	protected virtual void PRINT_DEBUG_STOP_MOVE( string msg="" ) { }
 }

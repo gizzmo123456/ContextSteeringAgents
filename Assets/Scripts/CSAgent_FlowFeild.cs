@@ -31,4 +31,9 @@ public class CSAgent_FlowFeild : CSAgent
 
 	}
 
+	protected override void PRINT_DEBUG_STOP_MOVE( string msg)
+	{
+		print( $"{name} :: {msg} -> {GetAngleFromVectors( Forwards, direction )}" );
+	}
+
 }

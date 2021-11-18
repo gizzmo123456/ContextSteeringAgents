@@ -223,6 +223,8 @@ public class FlowFeild : MonoBehaviour
 
         directionVector = flowFeild[cellId].direction;
 
+        Debug.DrawLine( flowFeild[cellId].position + new Vector2( -0.5f, 0f ), flowFeild[cellId].position + new Vector2( 0.5f, 0f ), Color.white, Time.deltaTime );
+
         return !flowFeild[cellId].blocked;
 
     }
