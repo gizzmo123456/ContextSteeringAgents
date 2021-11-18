@@ -40,8 +40,11 @@ public class FlowFeild : MonoBehaviour
     [SerializeField, Range(0.1f, 1f)] 
     private float rayCellSize = 0.9f;
     private RaycastHit2D[] rayHit = new RaycastHit2D[1];    // we only care if we hit one object.
+    [SerializeField]
+    private LayerMask detectObjectsMask;
 
     private CellScore[] flowFeild;
+
 
     void Awake()
     {
@@ -69,7 +72,7 @@ public class FlowFeild : MonoBehaviour
                 cells[ id ] = new CellScore();
 
                 // find if theres an object in the cell.
-                int hits = Physics2D.BoxCastNonAlloc( new Vector2( x, y ), Vector2.one * rayCellSize, 0, Vector2.zero, rayHit );
+                int hits = Physics2D.BoxCastNonAlloc( new Vector2( x, y ), Vector2.one * rayCellSize, 0, Vector2.zero, rayHit, 0, detectObjectsMask );
 
                 if ( hits > 0 )
                 {
@@ -156,10 +159,6 @@ public class FlowFeild : MonoBehaviour
 
             Debug.DrawLine( startPos, endPos, Color.red, 600 );
 
-            Debug.DrawLine( startPos + new Vector3( -0.5f, 0.5f ), startPos + new Vector3( 0.5f, 0.5f ), Color.black, 600 );      // top
-            Debug.DrawLine( startPos + new Vector3( -0.5f, -0.5f ), startPos + new Vector3( 0.5f, -0.5f ), Color.black, 600 );    // bottom
-            Debug.DrawLine( startPos + new Vector3( -0.5f, 0.5f ), startPos + new Vector3( -0.5f, -0.5f ), Color.black, 600 );    // left
-            Debug.DrawLine( startPos + new Vector3( 0.5f, 0.5f ), startPos + new Vector3( 0.5f, -0.5f ), Color.black, 600 );      // right
         }
 
         print( s );
@@ -215,6 +214,13 @@ public class FlowFeild : MonoBehaviour
 
         int cellId = (int)worldPosition.y * area.x + (int)worldPosition.x;
 
+        if ( cellId < 0 || cellId >= flowFeild.Length )
+        {
+
+            directionVector = Vector2.zero;
+            return false;
+		}
+
         directionVector = flowFeild[cellId].direction;
 
         return !flowFeild[cellId].blocked;
@@ -246,5 +252,48 @@ public class FlowFeild : MonoBehaviour
 		}
 
 	}
+
+	// Debuging
+	private void OnDrawGizmos()
+	{
+        Gizmos.color = new Color( 0, 0, 0, 0.25f );
+        Gizmos.DrawCube( new Vector3( area.x/2f-0.5f, area.y/2f-0.5f, 0f ), new Vector3( area.x, area.y, 0.1f) );
+
+        
+        Vector3 startPos = new Vector3(0, 0);
+
+        for ( int x = 0; x < area.x; x++ )
+            for ( int y = 0; y < area.y; y++ )
+            {
+
+                int cellID = y * area.x + x;
+
+                if ( flowFeild != null && cellID < flowFeild.Length && flowFeild[cellID].blocked )
+                    continue;
+
+                startPos.x = x;
+                startPos.y = y;
+                                        
+                Gizmos.color = new Color( 0, 0, 0, 0.5f );
+
+                // Only draw the first top and left line
+
+                if ( y == 0 )
+                    Gizmos.DrawLine( startPos + new Vector3( -0.5f, 0.5f ), startPos + new Vector3( 0.5f, 0.5f ) ); // top
+
+                if ( x == 0 )
+                    Gizmos.DrawLine( startPos + new Vector3( -0.5f, 0.5f ), startPos + new Vector3( -0.5f, -0.5f ) ); // left
+
+                Gizmos.DrawLine( startPos + new Vector3( -0.5f, -0.5f ), startPos + new Vector3( 0.5f, -0.5f ) );  // bottom
+                Gizmos.DrawLine( startPos + new Vector3( 0.5f, 0.5f ), startPos + new Vector3( 0.5f, -0.5f ) );  // right
+
+                if ( x == sourceCell.x && y == sourceCell.y )
+                {
+                    Gizmos.color = new Color( 0, 1, 0, 0.5f );
+                    Gizmos.DrawCube( startPos, Vector3.one * 0.5f );
+				}
+
+            }
+    }
 
 }
