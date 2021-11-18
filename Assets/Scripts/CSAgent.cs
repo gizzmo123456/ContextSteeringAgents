@@ -98,7 +98,10 @@ public class CSAgent : MonoBehaviour
 	[SerializeField] private float agent_moveSpeed = 5f; // units per second
 	[SerializeField] private float agent_radius = 0.5f;
 	[SerializeField] private float agent_avoidRadius = 0; // the amount of distance that we should maintain between agents.
-	[SerializeField] private float agent_avoidMaxRange = 4;	// this should be above 0 and not exceed the detect radius 
+
+	[SerializeField] private float agent_avoidMaxRange = 4; // this should be above 0 and not exceed the detect radius
+	[SerializeField] private float agent_objectAvoidMaxRange = 1;
+
 	private float agent_avoidDistance => agent_radius + agent_avoidRadius;
 
 	[Header( "Obstacle detection" )]
@@ -162,10 +165,16 @@ public class CSAgent : MonoBehaviour
 				CSAgent otherAgent = hit.transform.GetComponent<CSAgent>();
 
 				if ( otherAgent != null ) // avoid agents.
-					AvoidObject( otherAgent.transform.position, agent_avoidDistance + otherAgent.agent_avoidDistance, "Agent" );
+					AvoidObject( otherAgent.transform.position, agent_avoidDistance + otherAgent.agent_avoidDistance, agent_avoidMaxRange, "Agent" );
 				else // avoid static objects
-					AvoidObject( hit.point, agent_avoidDistance*2f, "Obs" );	// this does not really work for large objects
- 
+				{
+					Vector2 cloestPos = hit.collider.ClosestPoint( transform.position );
+					AvoidObject( cloestPos, agent_avoidDistance * 2f, agent_objectAvoidMaxRange, "Obs" );   // this does not really work for large objects
+
+					Debug.DrawLine( cloestPos + new Vector2( -0.25f, 0 ), cloestPos + new Vector2( 0.25f, 0 ), Color.magenta, Time.deltaTime );
+					Debug.DrawLine( cloestPos + new Vector2( 0, -0.25f ), cloestPos + new Vector2( 0, 0.25f), Color.magenta, Time.deltaTime );
+					Debug.Log( "Cunt :: " + cloestPos, hit.transform );
+				}
 			} 
 
 			MaskDanagerMap();
@@ -176,7 +185,7 @@ public class CSAgent : MonoBehaviour
 			//	print( $"{moveTo_slotID} Slot move to id: {moveTo_slotID} -> {moveTo_heading}" );
 
 			if ( DEBUG_PRINT_MAP )
-				print( $"{name} :: move to slot id -> {moveTo_slotID} = {moveTo_slotID * ( 360f / cm_slots )}" );
+				print( $"{name} :: move to slot id -> {moveTo_slotID} = {moveTo_slotID * ( 360f / cm_slots )} (Gradent Heading: {moveTo_heading} = {moveTo_heading * ( 360f / cm_slots )})" );
 
 			transform.eulerAngles = new Vector3( 0, 0, moveTo_heading * ( 360f / cm_slots ) );
 			Move( agent_moveSpeed );
@@ -187,6 +196,7 @@ public class CSAgent : MonoBehaviour
 			// head to the target.
 			RotateDelta( GetAngleFromVectors(Forwards, ( TargetPosition - transform.position).normalized) );
 			Move( agent_moveSpeed );
+			print( "No hit" );
 		}
 
 		PrintMaps();
@@ -199,14 +209,14 @@ public class CSAgent : MonoBehaviour
 			target = AgentSpawn.GetTraget();
 	}
 
-	private void AvoidObject( Vector3 avoidPosition, float avoidDistance, string debugName="NONE")
+	private void AvoidObject( Vector3 avoidPosition, float avoidDistance, float maxAvoidDistance, string debugName="NONE")
 	{
 
 		int map_damSlotID = GetMapSlotID( avoidPosition );
 		float dist = Vector2.Distance( transform.position, avoidPosition ) - avoidDistance;
-		float danagerValue = 1f - dist / agent_avoidMaxRange;
+		float danagerValue = 1f - dist / maxAvoidDistance;
 
-		SetMapSlot( ref map_danager, map_damSlotID, 2, danagerValue );
+		SetMapSlot( ref map_danager, map_damSlotID, 4, danagerValue );
 
 		if ( DEBUG )
 			print( $"{name} -> {debugName} :: { map_damSlotID } :: {dist} :: {danagerValue}" );
@@ -303,6 +313,9 @@ public class CSAgent : MonoBehaviour
 	private int MaskIntrestMap()
 	{
 
+		if ( DEBUG )
+			PrintIntresstMap( "pre" );
+
 		float highestValue = -1;
 		int highestSlotID = -1;
 
@@ -319,6 +332,9 @@ public class CSAgent : MonoBehaviour
 			}
 
 		}
+
+		if ( DEBUG )
+			PrintIntresstMap( "post" );
 
 		return highestSlotID;
 
@@ -466,6 +482,20 @@ public class CSAgent : MonoBehaviour
 		}
 
 		print( $"{name} :: {msg} Danager Map: {danStr}" );
+
+	}
+
+	private void PrintIntresstMap( string msg )
+	{
+
+		string intStr = "|";
+
+		for ( int i = 0; i < cm_slots; i++ )
+		{
+			intStr += map_intress[i] + " | ";
+		}
+
+		print( $"{name} :: {msg} Intress Map: {intStr}" );
 
 	}
 }
