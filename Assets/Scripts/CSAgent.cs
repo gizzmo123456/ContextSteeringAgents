@@ -87,6 +87,7 @@ public class CSAgent : MonoBehaviour
 
     const int cm_slotsPer90Deg = 3;
     const int cm_slots = cm_slotsPer90Deg * 4;
+	const float rotation_steps = 360f / cm_slots;
 
 	private Vector3 Forwards => transform.up;
 	private Vector3 Right => transform.right;
@@ -185,9 +186,9 @@ public class CSAgent : MonoBehaviour
 			//	print( $"{moveTo_slotID} Slot move to id: {moveTo_slotID} -> {moveTo_heading}" );
 
 			if ( DEBUG_PRINT_MAP )
-				print( $"{name} :: move to slot id -> {moveTo_slotID} = {moveTo_slotID * ( 360f / cm_slots )} (Gradent Heading: {moveTo_heading} = {moveTo_heading * ( 360f / cm_slots )})" );
+				print( $"{name} :: move to slot id -> {moveTo_slotID} = {moveTo_slotID * rotation_steps} (Gradent Heading: {moveTo_heading} = {moveTo_heading * rotation_steps})" );
 
-			transform.eulerAngles = new Vector3( 0, 0, moveTo_heading * ( 360f / cm_slots ) );
+			transform.eulerAngles = new Vector3( 0, 0, moveTo_heading * rotation_steps );
 			Move( agent_moveSpeed );
 
 		}
@@ -315,9 +316,13 @@ public class CSAgent : MonoBehaviour
 
 		if ( DEBUG )
 			PrintIntresstMap( "pre" );
-
+		
+		// we want to sellect the slot with the high value,
+		// but if there multiple slots with the highest value,
+		// we want to sellect the one cloest to our target direction.
 		float highestValue = -1;
 		int highestSlotID = -1;
+		int highestSlotAngle = int.MaxValue;	
 
 		for ( int i = 0; i < cm_slots; i++ )
 		{
@@ -439,7 +444,7 @@ public class CSAgent : MonoBehaviour
 	private int GetMapSlotID( Vector3 objectPosition )
 	{
 		float map_angle = Get360AngleFromVectors( map_keyStartVector, ( objectPosition - transform.position ).normalized );
-		int id = Round( map_angle / ( 360F / cm_slots ) );
+		int id = Round( map_angle / rotation_steps );
 
 		if ( id == cm_slots )
 			id = 0;
