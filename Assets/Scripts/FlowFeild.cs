@@ -199,6 +199,7 @@ public class FlowFeild : MonoBehaviour
     public bool GetFlowFeildDirectionVector( Vector3 worldPosition, out Vector2 directionVector )
     {
 
+        Vector3 wp = worldPosition;
         // round the world position to the nearest cell. 
         // the center of the cell is at .0
         if ( worldPosition.x % 1f >= 0.5f )
@@ -221,9 +222,17 @@ public class FlowFeild : MonoBehaviour
             return false;
 		}
 
-        directionVector = flowFeild[cellId].direction;
+        // Find the vector between the players position and the direction vector.
+        Vector3 directionPosition = flowFeild[cellId].position + flowFeild[cellId].direction * 10;
+
+        directionVector = /*(directionPosition - wp).normalized; //*/ flowFeild[cellId].direction;
+
+        print( $"{flowFeild[cellId].direction} -> {directionVector}" );
 
         Debug.DrawLine( flowFeild[cellId].position + new Vector2( -0.5f, 0f ), flowFeild[cellId].position + new Vector2( 0.5f, 0f ), Color.white, Time.deltaTime );
+
+        Debug.DrawLine( flowFeild[cellId].position, flowFeild[cellId].position + flowFeild[cellId].direction, Color.green, Time.deltaTime );
+        Debug.DrawLine( wp, flowFeild[cellId].position + flowFeild[cellId].direction, Color.green, Time.deltaTime );
 
         return !flowFeild[cellId].blocked;
 

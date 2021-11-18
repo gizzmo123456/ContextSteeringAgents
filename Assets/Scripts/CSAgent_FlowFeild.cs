@@ -20,6 +20,7 @@ public class CSAgent_FlowFeild : CSAgent
 
 		if( flowFeild.GetFlowFeildDirectionVector( transform.position, out dir ) )
 		{
+
 			direction = dir;
 			if ( DEBUG )
 				print("set " + dir);
@@ -29,6 +30,29 @@ public class CSAgent_FlowFeild : CSAgent
 
 		Debug.DrawLine( transform.position, TargetPosition, Color.blue, Time.deltaTime );
 
+	}
+
+	protected override (float lhs, float rhs) GetGradients()
+	{
+
+		float angle = GetAngleFromVectors( Forwards, direction );
+		
+		float lhs = 0.9f;
+		float rhs = 0.9f;
+
+		if ( angle > 0 )
+		{
+			lhs = ( 360f - angle ) / 360f;
+			rhs = ( 360f - ( 360f - angle ) ) / 360f;
+		}
+		else if ( angle < 0 )
+		{
+			angle = Mathf.Abs( angle );
+			rhs = ( 360f - angle ) / 360f;
+			lhs = ( 360f - ( 360f - angle ) ) / 360f;
+		}
+
+		return (lhs, rhs);
 	}
 
 	protected override void PRINT_DEBUG_STOP_MOVE( string msg)

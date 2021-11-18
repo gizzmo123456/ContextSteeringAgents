@@ -151,7 +151,8 @@ public class CSAgent : MonoBehaviour
 
 		// Set the intress map (We only have 1 desternation atm.)
 		int map_intrSlotId = GetMapSlotID( TargetPosition );
-		SetMapSlot( ref map_intress, map_intrSlotId, cm_slots/2, 1 );
+		(float lhs, float rhs) gradientsValues = GetGradients();
+		SetMapSlot( ref map_intress, map_intrSlotId, cm_slots/2, gradientsValues.lhs, gradientsValues.rhs, 1 );
 
 
 		if ( rayHits > 1 )
@@ -230,7 +231,7 @@ public class CSAgent : MonoBehaviour
 		float dist = Vector2.Distance( transform.position, avoidPosition ) - avoidDistance;
 		float danagerValue = 1f - dist / maxAvoidDistance;
 
-		SetMapSlot( ref map_danager, map_damSlotID, rollOffValues, danagerValue );
+		SetMapSlot( ref map_danager, map_damSlotID, rollOffValues, 0.5f, 0.5f, danagerValue );
 
 		if ( DEBUG )
 			print( $"{name} -> {debugName} :: { map_damSlotID } :: {dist} :: {danagerValue}" );
@@ -247,14 +248,17 @@ public class CSAgent : MonoBehaviour
 		transform.eulerAngles = transform.eulerAngles + new Vector3( 0, 0, rotateDelta );
 	}
 
-	private void SetMapSlot( ref float[] map, int slotID, int gradientSlots, float value )
+	private void SetMapSlot( ref float[] map, int slotID, int gradientSlots, float lhsGradientMultiplier, float rhsGradientMultiplier, float value )
 	{
 
 		gradientSlots++; // add on so we get at least 'rolloffSlots' above 0
 
 		if ( value > map[slotID] )
 			map[slotID] = value;
-		
+
+		float lhs_value = value;
+		float rhs_value = value;
+
 		// compute the rolloff values.
 		for ( int i = 1; i <= gradientSlots; i++ )
 		{
@@ -267,14 +271,14 @@ public class CSAgent : MonoBehaviour
 			if ( lhs < 0 )
 				lhs += cm_slots;
 
-			float valueMultiplier = 1f - (float)i / (float)gradientSlots;
-			float val = value * valueMultiplier;
+			rhs_value *= rhsGradientMultiplier;
+			lhs_value *= lhsGradientMultiplier;
 
-			if ( val > map[rhs] )
-				map[rhs] = val;
+			if ( rhs_value > map[rhs] )
+				map[rhs] = rhs_value;
 
-			if ( val > map[lhs] )
-				map[lhs] = val;
+			if ( lhs_value > map[lhs] )
+				map[lhs] = lhs_value;
 
 		}
 		
@@ -422,6 +426,11 @@ public class CSAgent : MonoBehaviour
 
 		return bestMaskedSlotId;
 
+	}
+
+	protected virtual (float lhs, float rhs) GetGradients()
+	{
+		return (0.75f, 0.75f);
 	}
 
 	/// <summary>
