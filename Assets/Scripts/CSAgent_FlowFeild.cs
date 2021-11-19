@@ -14,6 +14,8 @@ public class CSAgent_FlowFeild : CSAgent
 	private Vector3 direction = Vector3.zero;
 	protected override Vector3 TargetPosition => (direction * targetLength) + transform.position;
 
+	public bool DEBUG_GRADIENT = false;
+
 	protected override void UpdateAgent()
 	{
 		Vector2 dir;
@@ -51,6 +53,9 @@ public class CSAgent_FlowFeild : CSAgent
 			rhs = ( 360f - angle ) / 360f;
 			lhs = ( 360f - ( 360f - angle ) ) / 360f;
 		}
+
+		if ( DEBUG_GRADIENT )
+			print( $"{name} :: {angle} ## {lhs} ## {rhs}" );
 
 		return (lhs, rhs);
 	}

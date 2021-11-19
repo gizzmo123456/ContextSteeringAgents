@@ -223,11 +223,11 @@ public class FlowFeild : MonoBehaviour
 		}
 
         // Find the vector between the players position and the direction vector.
-        Vector3 directionPosition = flowFeild[cellId].position + flowFeild[cellId].direction * 10;
+        Vector3 directionPosition = flowFeild[cellId].position + flowFeild[cellId].direction * 5;
 
-        directionVector = /*(directionPosition - wp).normalized; //*/ flowFeild[cellId].direction;
+        directionVector = (directionPosition - wp).normalized; //*/ flowFeild[cellId].direction;
 
-        print( $"{flowFeild[cellId].direction} -> {directionVector}" );
+        //print( $"{flowFeild[cellId].direction} -> {directionVector}" );
 
         Debug.DrawLine( flowFeild[cellId].position + new Vector2( -0.5f, 0f ), flowFeild[cellId].position + new Vector2( 0.5f, 0f ), Color.white, Time.deltaTime );
 
