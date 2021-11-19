@@ -202,7 +202,7 @@ public class CSAgent : MonoBehaviour
 
 			MaskDanagerMap();
 			int moveTo_slotID = MaskIntrestMap();
-			float moveTo_heading = moveTo_slotID; //*/ GetIntressGradentSlot( moveTo_slotID, 2 );
+			float moveTo_heading = /*moveTo_slotID; //*/ GetIntressGradentSlot( moveTo_slotID, 2 );
 
 			targetRotation = moveTo_heading * rotation_step;
 			targetRotation = ClampRotation( targetRotation );

@@ -34,7 +34,7 @@ public class FlowFeild : MonoBehaviour
     [Header("Area")]
     // The Area to genarate the flow-feild for from in world position
     [SerializeField] private Vector2Int area = new Vector2Int( 50, 20 );
-    [SerializeField] private Vector2Int sourceCell = new Vector2Int( 25, 0 ); // from top left.
+    [SerializeField] private Vector2Int[] sourceCells; // from top left.
 
     [Header( "Object Detection" )]
     [SerializeField, Range(0.1f, 1f)] 
@@ -48,7 +48,7 @@ public class FlowFeild : MonoBehaviour
 
     void Awake()
     {
-        GenerateFlowFeild( sourceCell );
+        GenerateFlowFeild( sourceCells );
     }
 
     // Update is called once per frame
@@ -57,7 +57,7 @@ public class FlowFeild : MonoBehaviour
         
     }
 
-    void GenerateFlowFeild( Vector2 startCell )
+    void GenerateFlowFeild( Vector2Int[] startCells )
     {
 
         bool[] explored = new bool[ area.x * area.y ];
@@ -68,6 +68,7 @@ public class FlowFeild : MonoBehaviour
         {
             for ( int x = 0; x < area.x; x++ )
             {
+
                 int id = y * area.x + x;
                 cells[ id ] = new CellScore();
 
@@ -81,14 +82,23 @@ public class FlowFeild : MonoBehaviour
                     continue;
                 }
                 
-
                 explored[ id ] = false;
-                
 
-                if ( startCell.x != x || startCell.y != y )
+                // Find if this is a start cell, assiging it a score of 0 if it is
+                // Otherwise assign the max score
+                bool isStartPoint = false;
+
+                for ( int i = 0; i < startCells.Length; i++ )
+                    if ( startCells[i].x == x && startCells[i].y == y )
+                    {
+                        cells[id].Init( new Vector2( x, y ), 0 );
+                        isStartPoint = true;
+                    }
+
+
+                if ( !isStartPoint )
                     cells[id].Init( new Vector2( x, y ), int.MaxValue );
-                else
-                    cells[id].Init( new Vector2( x, y ), 0 );
+
 
             }
         }
@@ -253,16 +263,22 @@ public class FlowFeild : MonoBehaviour
     {
         worldPosition = RoundToFlowGrid( worldPosition );
 
-        return worldPosition.x == sourceCell.x && worldPosition.y == sourceCell.y;
+        foreach ( Vector2Int startCell in sourceCells )
+            if ( worldPosition.x == startCell.x && worldPosition.y == startCell.y )
+                return false;
+
+        return false;
 
 	}
 
     public bool InRangeOfSourceCell( Vector3 worldPosition, float distance=2f )
     {
 
+        foreach ( Vector2Int startCell in sourceCells )
+            if ( Vector3.Distance( new Vector3( startCell.x, startCell.y ), worldPosition ) <= distance)
+                return true;
 
-
-        return Vector3.Distance( new Vector3( sourceCell.x, sourceCell.y ), worldPosition ) <= distance;
+        return false;
 	}
 
     /// <summary>
@@ -343,11 +359,12 @@ public class FlowFeild : MonoBehaviour
                 Gizmos.DrawLine( startPos + new Vector3( -0.5f, -0.5f ), startPos + new Vector3( 0.5f, -0.5f ) );  // bottom
                 Gizmos.DrawLine( startPos + new Vector3( 0.5f, 0.5f ), startPos + new Vector3( 0.5f, -0.5f ) );  // right
 
-                if ( x == sourceCell.x && y == sourceCell.y )
-                {
-                    Gizmos.color = new Color( 0, 1, 0, 0.5f );
-                    Gizmos.DrawCube( startPos, Vector3.one * 0.5f );
-				}
+                foreach ( Vector2Int sourceCell in sourceCells )
+                    if ( x == sourceCell.x && y == sourceCell.y )
+                    {
+                        Gizmos.color = new Color( 0, 1, 0, 0.5f );
+                        Gizmos.DrawCube( startPos, Vector3.one * 0.5f );
+				    }
 
             }
     }
