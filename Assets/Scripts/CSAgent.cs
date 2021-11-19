@@ -96,7 +96,7 @@ public class CSAgent : MonoBehaviour
 
 	[Header( "Agent" )]
 	public Color agent_colour;
-	[SerializeField] private float agent_moveSpeed = 5f; // units per second
+	[SerializeField] public float agent_moveSpeed = 5f; // units per second
 	[SerializeField] private float agent_radius = 0.5f;
 	[SerializeField] private float agent_avoidRadius = 0; // the amount of distance that we should maintain between agents.
 
@@ -129,17 +129,25 @@ public class CSAgent : MonoBehaviour
 	public bool DEBUG = false;
 	public bool DEBUG_PRINT_MAP = false;
 	public bool DEBUG_STOP_MOVE = false;
+	public const bool DEBUG_DRAW = false;
 
 	private void Awake()
 	{
 
-		GetComponent<SpriteRenderer>().color = agent_colour;
+		agent_colour = new Color( Random.value, Random.value, Random.value, 1f );
+
 		transform.localScale = new Vector3( agent_radius*2f, agent_radius*2f, 1f );
 
 	}
 
-	private void Start()
+	protected virtual void Start()
 	{
+
+		if ( target )
+			GetComponent<SpriteRenderer>().color = target.GetComponent<target>().col;
+		else
+			GetComponent<SpriteRenderer>().color = agent_colour;
+
 		currentRotation = transform.eulerAngles.z;
 	}
 
@@ -179,10 +187,14 @@ public class CSAgent : MonoBehaviour
 					Vector2 cloestPos = hit.collider.ClosestPoint( transform.position );
 					AvoidObject( cloestPos, agent_avoidDistance * 2f, agent_objectAvoidMaxRange, 2, "Obs" );   // this does not really work for large objects
 
-					Debug.DrawLine( cloestPos + new Vector2( -0.25f, 0 ), cloestPos + new Vector2( 0.25f, 0 ), Color.magenta, Time.deltaTime );
-					Debug.DrawLine( cloestPos + new Vector2( 0, -0.25f ), cloestPos + new Vector2( 0, 0.25f), Color.magenta, Time.deltaTime );
+					if ( DEBUG_DRAW )
+					{
+						Debug.DrawLine( cloestPos + new Vector2( -0.25f, 0 ), cloestPos + new Vector2( 0.25f, 0 ), Color.magenta, Time.deltaTime );
+						Debug.DrawLine( cloestPos + new Vector2( 0, -0.25f ), cloestPos + new Vector2( 0, 0.25f ), Color.magenta, Time.deltaTime );
+					}
+
 					if ( DEBUG )
-						Debug.Log( "Cunt :: " + cloestPos, hit.transform );
+						Debug.Log( "cloest hit :: " + cloestPos, hit.transform );
 				}
 			} 
 
@@ -236,8 +248,11 @@ public class CSAgent : MonoBehaviour
 	protected virtual void UpdateAgent()
 	{
 		// TEMP (change target if close)
-		if ( Vector2.Distance( transform.position, TargetPosition ) < 10f )
+		if ( Vector2.Distance( transform.position, TargetPosition ) < 15f )
+		{
 			target = AgentSpawn.GetTraget();
+			GetComponent<SpriteRenderer>().color = target.GetComponent<target>().col;
+		}
 	}
 
 	private void AvoidObject( Vector3 avoidPosition, float avoidDistance, float maxAvoidDistance, int rollOffValues=2, string debugName="NONE")

@@ -190,16 +190,9 @@ public class FlowFeild : MonoBehaviour
         return (lowestId, lowest);
 	}
 
-    /// <summary>
-    /// Returns true if agents cell is not blocked by an obstacle
-    /// </summary>
-    /// <param name="worldPosition"></param>
-    /// <param name="directionVector"></param>
-    /// <returns></returns>
-    public bool GetFlowFeildDirectionVector( Vector3 worldPosition, out Vector2 directionVector )
+    private Vector3 RoundToFlowGrid( Vector3 worldPosition )
     {
 
-        Vector3 wp = worldPosition;
         // round the world position to the nearest cell. 
         // the center of the cell is at .0
         if ( worldPosition.x % 1f >= 0.5f )
@@ -212,6 +205,21 @@ public class FlowFeild : MonoBehaviour
         else
             worldPosition.y = Mathf.Floor( worldPosition.y );
 
+        return worldPosition;
+    }
+
+    /// <summary>
+    /// Returns true if agents cell is not blocked by an obstacle
+    /// </summary>
+    /// <param name="worldPosition"></param>
+    /// <param name="directionVector"></param>
+    /// <returns></returns>
+    public bool GetFlowFeildDirectionVector( Vector3 worldPosition, out Vector2 directionVector )
+    {
+
+        Vector3 wp = worldPosition;
+
+        worldPosition = RoundToFlowGrid( worldPosition );
 
         int cellId = (int)worldPosition.y * area.x + (int)worldPosition.x;
 
@@ -229,14 +237,51 @@ public class FlowFeild : MonoBehaviour
 
         //print( $"{flowFeild[cellId].direction} -> {directionVector}" );
 
-        Debug.DrawLine( flowFeild[cellId].position + new Vector2( -0.5f, 0f ), flowFeild[cellId].position + new Vector2( 0.5f, 0f ), Color.white, Time.deltaTime );
+        if ( CSAgent.DEBUG_DRAW )
+        {
+            Debug.DrawLine( flowFeild[cellId].position + new Vector2( -0.5f, 0f ), flowFeild[cellId].position + new Vector2( 0.5f, 0f ), Color.white, Time.deltaTime );
 
-        Debug.DrawLine( flowFeild[cellId].position, flowFeild[cellId].position + flowFeild[cellId].direction, Color.green, Time.deltaTime );
-        Debug.DrawLine( wp, flowFeild[cellId].position + flowFeild[cellId].direction, Color.green, Time.deltaTime );
+            Debug.DrawLine( flowFeild[cellId].position, flowFeild[cellId].position + flowFeild[cellId].direction, Color.green, Time.deltaTime );
+            Debug.DrawLine( wp, flowFeild[cellId].position + flowFeild[cellId].direction, Color.green, Time.deltaTime );
+        }
 
         return !flowFeild[cellId].blocked;
 
     }
+
+    public bool WorldPositionIsSourceCell( Vector3 worldPosition )
+    {
+        worldPosition = RoundToFlowGrid( worldPosition );
+
+        return worldPosition.x == sourceCell.x && worldPosition.y == sourceCell.y;
+
+	}
+
+    public bool InRangeOfSourceCell( Vector3 worldPosition, float distance=2f )
+    {
+
+
+
+        return Vector3.Distance( new Vector3( sourceCell.x, sourceCell.y ), worldPosition ) <= distance;
+	}
+
+    /// <summary>
+    /// Gets a rondom cell that is not blocked.
+    /// </summary>
+    /// <returns></returns>
+    public Vector3 GetRandomCell()
+    {
+
+        CellScore cell;
+
+        do
+        {
+            cell = flowFeild[Random.Range( 0, flowFeild.Length )];
+        } while ( cell.blocked );
+
+        return cell.position;
+
+	}
 
     class CellScore
     {

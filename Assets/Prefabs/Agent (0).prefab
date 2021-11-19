@@ -169,12 +169,15 @@ MonoBehaviour:
   agent_colour: {r: 1, g: 0, b: 0, a: 1}
   agent_moveSpeed: 8
   agent_radius: 0.5
-  agent_avoidRadius: 0.25
-  agent_avoidMaxRange: 2
-  detect_radius: 3
+  agent_avoidRadius: 0.125
+  agent_avoidMaxRange: 1
+  agent_objectAvoidMaxRange: 1
+  detect_radius: 2
   target: {fileID: 0}
+  maxRotateStep: 90
   DEBUG: 0
   DEBUG_PRINT_MAP: 0
+  DEBUG_STOP_MOVE: 0
 --- !u!1 &8929337783061678199
 GameObject:
   m_ObjectHideFlags: 0

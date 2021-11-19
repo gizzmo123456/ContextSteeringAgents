@@ -35,10 +35,9 @@ public class AgentSpawn : MonoBehaviour
 
         CSAgent agent = Instantiate( agentPrefab, transform.position, Quaternion.identity);
         agent.target = targets[ Random.Range(0, targets.Length) ];
-        agent.agent_colour = col; 
-        new Color( Random.value, Random.value, Random.value );
-        agent.GetComponent<SpriteRenderer>().color = col;
-        agent.name = $"agent ({6 + ++count})";
+        //agent.agent_colour = col; 
+        //agent.GetComponent<SpriteRenderer>().color = col;
+        agent.name = $"[{name}] - agent ({++count})";
         
         remainingTime = time;
 

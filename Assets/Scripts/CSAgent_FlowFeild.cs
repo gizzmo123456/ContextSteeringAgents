@@ -6,7 +6,7 @@ public class CSAgent_FlowFeild : CSAgent
 {
 
 	[Header( "FlowFeid" )]
-	[SerializeField] private FlowFeild flowFeild;
+	public FlowFeild flowFeild;
 
 
 	[Header( "Target" )]
@@ -15,6 +15,14 @@ public class CSAgent_FlowFeild : CSAgent
 	protected override Vector3 TargetPosition => (direction * targetLength) + transform.position;
 
 	public bool DEBUG_GRADIENT = false;
+
+	protected override void Start()
+	{
+		base.Start();
+
+		AgentSpawn_FlowFeild.inst.RespwanAgent( this );
+
+	}
 
 	protected override void UpdateAgent()
 	{
@@ -30,7 +38,14 @@ public class CSAgent_FlowFeild : CSAgent
 		else if ( DEBUG )
 			print( "not set" );
 
-		Debug.DrawLine( transform.position, TargetPosition, Color.blue, Time.deltaTime );
+		if ( DEBUG_DRAW )
+			Debug.DrawLine( transform.position, TargetPosition, Color.blue, Time.deltaTime );
+
+		// TEMP Respwan agent.
+		if ( flowFeild.InRangeOfSourceCell( transform.position, 1.25f ) )
+		{
+			AgentSpawn_FlowFeild.inst.RespwanAgent( this );
+		}
 
 	}
 
