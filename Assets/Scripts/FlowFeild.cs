@@ -237,7 +237,7 @@ public class FlowFeild : MonoBehaviour
 
         //print( $"{flowFeild[cellId].direction} -> {directionVector}" );
 
-        if ( CSAgent.DEBUG_DRAW )
+        if ( CSAgent.DEBUG_DRAW_ALL )
         {
             Debug.DrawLine( flowFeild[cellId].position + new Vector2( -0.5f, 0f ), flowFeild[cellId].position + new Vector2( 0.5f, 0f ), Color.white, Time.deltaTime );
 

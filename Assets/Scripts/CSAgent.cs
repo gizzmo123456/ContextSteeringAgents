@@ -129,7 +129,9 @@ public class CSAgent : MonoBehaviour
 	public bool DEBUG = false;
 	public bool DEBUG_PRINT_MAP = false;
 	public bool DEBUG_STOP_MOVE = false;
-	public const bool DEBUG_DRAW = false;
+	public bool DEBUG_DRAW_AGENT = false;
+	public const bool DEBUG_DRAW_ALL = false;
+	public bool DEBUG_DRAW => DEBUG_DRAW_AGENT || DEBUG_DRAW_ALL;
 
 	private void Awake()
 	{
