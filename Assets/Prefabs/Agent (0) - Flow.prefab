@@ -172,12 +172,14 @@ MonoBehaviour:
   agent_avoidRadius: 0.1
   agent_avoidMaxRange: 0.25
   agent_objectAvoidMaxRange: 0.1
+  lastStaticObject_distanceMultiplier: 30
   detect_radius: 1
   target: {fileID: 0}
   maxRotateStep: 45
   DEBUG: 0
   DEBUG_PRINT_MAP: 0
   DEBUG_STOP_MOVE: 0
+  DEBUG_DRAW_AGENT: 0
   flowFeild: {fileID: 0}
   targetLength: 5
   DEBUG_GRADIENT: 0
