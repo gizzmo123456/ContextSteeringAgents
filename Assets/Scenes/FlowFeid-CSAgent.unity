@@ -15191,6 +15191,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1252659344}
+  - component: {fileID: 1252659346}
   - component: {fileID: 1252659343}
   - component: {fileID: 1252659345}
   m_Layer: 0
@@ -15250,8 +15251,27 @@ MonoBehaviour:
   agent: {fileID: 6501560626213451086, guid: 0bddab5e448649b43b4fabbcd52171ac, type: 3}
   agentsToSpwan: 200
   spwanTime: 0.1
-  minMoveSpeed: 2
-  maxMoveSpeed: 3
+  minMoveSpeed: 1
+  maxMoveSpeed: 2
+  rayTest: 1
+  rayMask:
+    serializedVersion: 2
+    m_Bits: 64
+  rayBoxSize: {x: 1, y: 1}
+--- !u!114 &1252659346
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1252659342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71be2024f2f1ae946862b94e6b501dd0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  startInTime: 5
+  endInTime: -1
 --- !u!1001 &1254462873
 PrefabInstance:
   m_ObjectHideFlags: 0

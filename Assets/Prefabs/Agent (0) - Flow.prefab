@@ -174,7 +174,7 @@ MonoBehaviour:
   agent_objectAvoidMaxRange: 0.1
   detect_radius: 1
   target: {fileID: 0}
-  maxRotateStep: 90
+  maxRotateStep: 360
   DEBUG: 0
   DEBUG_PRINT_MAP: 0
   DEBUG_STOP_MOVE: 0

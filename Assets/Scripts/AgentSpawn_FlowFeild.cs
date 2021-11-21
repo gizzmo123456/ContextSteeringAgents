@@ -19,6 +19,13 @@ public class AgentSpawn_FlowFeild : MonoBehaviour
 
     int spawnedCount = 0;
 
+    [Header( "Raycast Check" )]
+    [Tooltip( "Should it check if an object is at the spawn location. Ie an agent." )]
+    public bool rayTest = false;
+    public LayerMask rayMask;
+    public Vector2 rayBoxSize;
+    RaycastHit2D[] rayHits = new RaycastHit2D[1];
+
 	private void Awake()
 	{
         inst = this;
@@ -45,7 +52,26 @@ public class AgentSpawn_FlowFeild : MonoBehaviour
     public void RespwanAgent( CSAgent_FlowFeild agen )
     {
 
-        agen.transform.position = flowFeild.GetRandomCell();
+        Vector3 location = flowFeild.GetRandomCell();
+
+        if ( rayTest )
+        {
+
+            // only spwan agent if there is nothing at location.
+
+            int hitCount = int.MaxValue;
+
+            while ( hitCount > 0 )
+            {
+                hitCount = Physics2D.BoxCastNonAlloc( location, rayBoxSize, 0, Vector2.zero, rayHits, 0, rayMask );
+
+                if ( hitCount > 0 )
+                    location = flowFeild.GetRandomCell();
+            }
+
+		}
+
+        agen.transform.position = location;
         agen.flowFeild = flowFeild;
         agen.agent_moveSpeed = Random.Range( minMoveSpeed, maxMoveSpeed );
 

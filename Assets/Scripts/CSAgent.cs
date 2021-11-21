@@ -85,6 +85,8 @@ using UnityEngine;
 public class CSAgent : MonoBehaviour
 {
 
+	private const bool COUNT_AGENT_COLLISIONS = false;
+
     const int cm_slotsPer90Deg = 3;
     const int cm_slots = cm_slotsPer90Deg * 4;
 	const float rotation_step = 360f / cm_slots;
@@ -98,6 +100,7 @@ public class CSAgent : MonoBehaviour
 	public Color agent_colour;
 	[SerializeField] public float agent_moveSpeed = 5f; // units per second
 	[SerializeField] private float agent_radius = 0.5f;
+	public float AgentRadius => agent_radius;
 	[SerializeField] private float agent_avoidRadius = 0; // the amount of distance that we should maintain between agents.
 
 	[SerializeField] private float agent_avoidMaxRange = 4; // this should be above 0 and not exceed the detect radius
@@ -113,13 +116,15 @@ public class CSAgent : MonoBehaviour
 	// context maps.
 	// a value of -1 (or <0) is masked out
 	private Vector2 map_keyStartVector = Vector2.up;
-	private float[] map_danager  = new float[ cm_slots ];
-    private float[] map_intress = new float[ cm_slots ];
+	private float[] map_danager = new float[ cm_slots ];
+	private int[]   map_mask    = new int  [ cm_slots ];
+	private float[] map_intress = new float[ cm_slots ];
 
 	[Header( "target" )]
 	public Transform target;
 	protected virtual Vector3 TargetPosition => target.position;
 
+	protected int currentSlotId = 0;	// mostly for debuging :)
 	protected float currentRotation = 0;
 	protected float targetRotation = 0;
 	protected float rotStep = 0;
@@ -141,6 +146,17 @@ public class CSAgent : MonoBehaviour
 
 		transform.localScale = new Vector3( agent_radius*2f, agent_radius*2f, 1f );
 
+		// Spawn the collisionCounter.
+		if ( COUNT_AGENT_COLLISIONS )
+		{
+			GameObject collisionCount = new GameObject();
+			collisionCount.AddComponent<CollisionDetector>();
+			collisionCount.transform.parent = transform;
+			collisionCount.transform.localPosition = Vector3.zero;
+			collisionCount.transform.localRotation = Quaternion.identity;
+			
+		}
+
 	}
 
 	protected virtual void Start()
@@ -156,6 +172,9 @@ public class CSAgent : MonoBehaviour
 
 	private void FixedUpdate()
 	{
+
+		if ( !SceneManagement.started )
+			return;
 
 		UpdateAgent();
 
@@ -204,7 +223,7 @@ public class CSAgent : MonoBehaviour
 				}
 			}
 
-			MaskDanagerMap();
+			CreateMaskMap();
 			int moveTo_slotID = MaskIntrestMap();
 			float moveTo_heading = /*moveTo_slotID; //*/ GetIntressGradentSlot( moveTo_slotID, 2 );
 
@@ -227,8 +246,14 @@ public class CSAgent : MonoBehaviour
 
 			if ( !DEBUG_STOP_MOVE )
 			{
+				// rotate the agent find how much danager we are moving into
+				// slowing down the agent to reduce the risk :)
 				RotateDelta( rotUpdate );
-				Move( agent_moveSpeed );
+
+				currentSlotId = GetMapSlotID( currentRotation );
+				float danager = Mathf.Clamp01( map_danager[currentSlotId] * map_intress[ currentSlotId ] ) ;
+
+				Move( agent_moveSpeed * (1f - danager) );
 			}
 			else
 			{
@@ -334,9 +359,10 @@ public class CSAgent : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Creates the mask map from the danager map, using the highest values.
 	/// Find the lowest danager value and mask the rest (with -1).
 	/// </summary>
-	private void MaskDanagerMap()
+	private void CreateMaskMap()
 	{
 
 		float lowestValue = 9999;
@@ -355,7 +381,7 @@ public class CSAgent : MonoBehaviour
 			else if ( map_danager[i] > lowestValue )
 			{	
 				// mask values above the lowest
-				map_danager[i] = -1;
+				map_mask[i] = -1;
 			}
 
 		}
@@ -363,7 +389,7 @@ public class CSAgent : MonoBehaviour
 		// mask all values that come befor the lowest value.
 		for ( int i = 0; i < lowestStartIdx; i++ )
 		{
-			map_danager[i] = -1;
+			map_mask[i] = -1;
 		}
 
 		if ( DEBUG )
@@ -388,7 +414,7 @@ public class CSAgent : MonoBehaviour
 		for ( int i = 0; i < cm_slots; i++ )
 		{
 
-			if ( map_danager[i] == -1 )
+			if ( map_mask[i] == -1 )
 				map_intress[i] = -1;
 
 			if ( map_intress[i] > highestValue )
@@ -475,6 +501,7 @@ public class CSAgent : MonoBehaviour
 		for ( int i = 0; i < cm_slots; i++ )
 		{
 			map_danager[i] = 0;
+			map_mask[i]    = 0;
 			map_intress[i] = 0;
 		}
 
@@ -502,6 +529,18 @@ public class CSAgent : MonoBehaviour
 	{
 		float map_angle = Get360AngleFromVectors( map_keyStartVector, ( objectPosition - transform.position ).normalized );
 		int id = Round( map_angle / rotation_step );
+
+		if ( id == cm_slots )
+			id = 0;
+
+		return id;
+
+	}
+
+	private int GetMapSlotID( float rotation )
+	{
+
+		int id = Round( rotation / rotation_step );
 
 		if ( id == cm_slots )
 			id = 0;
@@ -538,12 +577,14 @@ public class CSAgent : MonoBehaviour
 			return;
 
 		string intrStr = "| ";
-		string danStr = "|";
+		string danStr  = "|";
+		string maskStr = "|";
 
 		for ( int i = 0; i < cm_slots; i++ )
 		{
 			intrStr += map_intress[i] + " | ";
 			danStr += map_danager[i] + " | ";
+			maskStr += map_mask[i] + " | ";
 		}
 
 		print( $"Intresst Map: {intrStr}" );
@@ -555,7 +596,7 @@ public class CSAgent : MonoBehaviour
 	private void DrawMap()
 	{
 		// Draw the map around the player
-print( " b bvf fbn" );
+
 		for ( int i = 0; i < map_intress.Length; i++ )
 		{
 
