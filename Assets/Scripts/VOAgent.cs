@@ -28,7 +28,7 @@ public class VOAgent : MonoBehaviour
     [SerializeField]
     private float agentRadius = 0.5f;
     [SerializeField]
-    private float agentMoveSpeed = 5f; // units per second.
+    public float agentMoveSpeed = 5f; // units per second.
 
     private bool happy = true;  // agent if happy when no other agnets are in range.
 
@@ -108,11 +108,7 @@ public class VOAgent : MonoBehaviour
                     Vector2 agentVector = (rh.transform.position - transform.position).normalized;
                     Vector2 velocityDiff = otherAgent.currentVelocity - currentVelocity;
 
-                    float timeTillCollision = GetMaxTimeTillCollision(velocityDiff, rh.transform.position - transform.position - new Vector3(agentRadius + otherAgent.agentRadius, agentRadius + otherAgent.agentRadius, 0) );
-
-                    print(name+" :: "+timeTillCollision);
-
-                    
+                    float timeTillCollision = GetMaxTimeTillCollision(velocityDiff, rh.transform.position - transform.position /*- new Vector3(agentRadius + otherAgent.agentRadius, agentRadius + otherAgent.agentRadius, 0)*/ );             
 
                     //float velocityAngle = Mathf.Abs( GetAngleFormReleventPosition(new Vector2(Forwards.x, Forwards.y) - velocityVector ) );
 
@@ -127,13 +123,14 @@ public class VOAgent : MonoBehaviour
                        continue;
 
                     // make sure the agent is infront of us with upto around 90deg
-                    if (dot > 0f) // this can be higher...
+                    if (dot >= -0.4f) // this can be higher...
                     {
 
-                        if (timeTillCollision == Mathf.Infinity || Mathf.Abs(timeTillCollision) > 3)
-                            continue;
+                        float dist = Vector2.Distance(transform.position, rh.transform.position) - agentRadius - otherAgent.agentRadius;
 
-                        float dist = Vector2.Distance(transform.position, rh.transform.position);
+                        if (DEBUG)
+                            print( $"Dist {name} -> {rh.transform.name} = {dist} " );
+
                         if (dist >= distance)
                             continue;
 
@@ -191,7 +188,7 @@ public class VOAgent : MonoBehaviour
                         //print($"{name}: is unhappy, get out of my space... ({dot})");
 
                     }
-                    else if (!happy && dot < -0.4f)
+                    else if (!happy && (timeTillCollision == Mathf.Infinity || timeTillCollision == Mathf.NegativeInfinity) )//dot < -0.4f)
                     {
                         happy = true;
                         //print($"{name}: is now happy ({dot})");
@@ -263,22 +260,21 @@ public class VOAgent : MonoBehaviour
         return (transform.position - worldPosition).normalized;
     }
 
-    // Get the max time till collision, -Inf if a collision can not happen.
+    // Get the max time till collision, Inf if a collision can not happen.
     private float GetMaxTimeTillCollision( Vector3 speedDif, Vector3 vectorDist )
     {
-        /*
+        
             Vector2 axisTimeTillCollision = Vector2.zero;
 
-            axisTimeTillCollision.x = speedDif.x != 0 ? vectorDist.x / speedDif.x : Mathf.NegativeInfinity;
-            axisTimeTillCollision.y = speedDif.y != 0 ? vectorDist.y / speedDif.y : Mathf.NegativeInfinity;
+            axisTimeTillCollision.x = ( speedDif.x > 0 && vectorDist.x < 0) || (speedDif.x < 0 && vectorDist.x > 0) ? -(vectorDist.x / speedDif.x) : Mathf.Infinity;
+            axisTimeTillCollision.y = ( speedDif.y > 0 && vectorDist.y < 0) || (speedDif.y < 0 && vectorDist.y > 0) ? -(vectorDist.y / speedDif.y) : Mathf.Infinity;
 
-            print($"{name} ## {speedDif} ## {vectorDist}");
+            if ( DEBUG )
+                print($"{name} ## {speedDif} ## {vectorDist} ## {axisTimeTillCollision}");
 
-            return Mathf.Max( axisTimeTillCollision.x, axisTimeTillCollision.y );
-        */
-
-        return vectorDist.magnitude / speedDif.magnitude;
+            return Mathf.Min( axisTimeTillCollision.x, axisTimeTillCollision.y );
 
 	}
 
 }
+   

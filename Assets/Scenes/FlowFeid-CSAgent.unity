@@ -15251,7 +15251,7 @@ MonoBehaviour:
   agentsToSpwan: 200
   spwanTime: 0.1
   minMoveSpeed: 2
-  maxMoveSpeed: 5
+  maxMoveSpeed: 3
 --- !u!1001 &1254462873
 PrefabInstance:
   m_ObjectHideFlags: 0

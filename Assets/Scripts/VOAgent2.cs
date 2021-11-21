@@ -203,6 +203,11 @@ public class VOAgent2 : MonoBehaviour
 				distance = dist;
 			}
 
+
+			Vector3 otherAgentVelPerp = Vector2.Perpendicular( otherAgent.Forwards - Forwards ).normalized;
+			Debug.DrawLine( otherAgent.transform.position - otherAgentVelPerp * 12, otherAgent.transform.position + otherAgentVelPerp * 12, agentColour, Time.deltaTime );
+
+
 		}
 
 		if ( closestAgent != currentAvoidAgent )
@@ -221,10 +226,17 @@ public class VOAgent2 : MonoBehaviour
 		if ( currentAvoidAgent != null )
 		{
 			
-			Vector3 desiredPerend = Vector2.Perpendicular( desiredVectorNorm ).normalized;
+			// Any one of these 3 could be valid, However, DP_2 seems to be one of the methods used in ORCA, so that might be the best way.
+			// In ORCA they use the intersection of the half-planes
+		  //Vector3 desiredPerend_0 = Vector2.Perpendicular( desiredVectorNorm ).normalized;
+			Vector3 desiredPerend_1 = Vector2.Perpendicular( currentAvoidAgent.Forwards ).normalized;
+			Vector3 desiredPerend_2 = Vector2.Perpendicular( currentAvoidAgent.Forwards - Forwards).normalized;
 
-			currentAvoidTargets[0] = currentAvoidAgent.transform.position - desiredPerend * ( agentRadius + currentAvoidAgent.agentRadius );
-			currentAvoidTargets[1] = currentAvoidAgent.transform.position + desiredPerend * ( agentRadius + currentAvoidAgent.agentRadius );
+			currentAvoidTargets[0] = currentAvoidAgent.transform.position - desiredPerend_1 * ( agentRadius + currentAvoidAgent.agentRadius );
+			currentAvoidTargets[1] = currentAvoidAgent.transform.position + desiredPerend_1 * ( agentRadius + currentAvoidAgent.agentRadius );
+
+			//Debug.DrawLine( currentAvoidAgent.transform.position - desiredPerend_1 * 3, currentAvoidAgent.transform.position + desiredPerend_1 * 3, agentColour, Time.deltaTime );
+			//Debug.DrawLine( currentAvoidAgent.transform.position - desiredPerend_2 * 3, currentAvoidAgent.transform.position + desiredPerend_2 * 3, Color.blue, Time.deltaTime );
 
 		}
 

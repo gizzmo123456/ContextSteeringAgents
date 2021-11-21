@@ -5,6 +5,8 @@ using UnityEngine;
 public class CSAgent_FlowFeild : CSAgent
 {
 
+	public bool respwanOnStart = false;
+
 	[Header( "FlowFeid" )]
 	public FlowFeild flowFeild;
 
@@ -20,7 +22,8 @@ public class CSAgent_FlowFeild : CSAgent
 	{
 		base.Start();
 
-		AgentSpawn_FlowFeild.inst.RespwanAgent( this );
+		if ( respwanOnStart )
+			AgentSpawn_FlowFeild.inst.RespwanAgent( this );
 
 	}
 
@@ -57,27 +60,37 @@ public class CSAgent_FlowFeild : CSAgent
 		float lhs = 0.9f;
 		float rhs = 0.9f;
 
-		if ( angle > 0 )
-		{
-			lhs = ( 360f - angle ) / 360f;
-			rhs = ( 360f - ( 360f - angle ) ) / 360f;
-		}
-		else if ( angle < 0 )
+		if ( angle < 0 )
 		{
 			angle = Mathf.Abs( angle );
+			lhs = ( 360f - angle ) / 360f;
+			rhs = ( 360f - ( 360f - angle ) ) / 360f;
+
+			//Debug.DrawLine( transform.position, transform.position + transform.right * -2f, Color.blue );
+		}
+		else if ( angle > 0 )
+		{
+			
 			rhs = ( 360f - angle ) / 360f;
 			lhs = ( 360f - ( 360f - angle ) ) / 360f;
+
+			//Debug.DrawLine( transform.position, transform.position + transform.right * 2f, Color.red );
+
+		}
+		else
+		{
+			//Debug.DrawLine( transform.position, transform.position + transform.forward * 2f, Color.green );
 		}
 
 		if ( DEBUG_GRADIENT )
-			print( $"{name} :: {angle} ## {lhs} ## {rhs}" );
+			print( $"{name} :: {angle} ## {lhs} ## {rhs} ## fwr {Forwards} ## dir {direction}" );
 
 		return (lhs, rhs);
 	}
 
 	protected override void PRINT_DEBUG_STOP_MOVE( string msg)
 	{
-		print( $"{name} :: {msg} -> {GetAngleFromVectors( Forwards, direction )}" );
+		//print( $"{name} :: {msg} -> {GetAngleFromVectors( Forwards, direction )}" );
 	}
 
 }

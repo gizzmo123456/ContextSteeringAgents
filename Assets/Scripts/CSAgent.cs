@@ -105,17 +105,6 @@ public class CSAgent : MonoBehaviour
 
 	private float agent_avoidDistance => agent_radius + agent_avoidRadius;
 
-	// Some times agents get stuck on static objects,
-	// because they move out off range then move streate back into range.
-	// witch becomes a endless cycle. (causeing the agent to spin)
-	// This only really happens on corners and when avoiding a single static object.
-	// and it doesent happen when there more than one agent in range.
-	// So the idea is to remember the last static object amd move further away than
-	// the objectAvoidMaxRange, befor forgeting about that object,
-	// so it doesnt return within a single frame
-	private Collider2D lastDetectedStaticObject = null;
-	[SerializeField] private float lastStaticObject_distanceMultiplier = 20f;
-
 	[Header( "Obstacle detection" )]
 	const int detect_objectCount = 6;
 	[SerializeField] private RaycastHit2D[] detect_hits = new RaycastHit2D[ detect_objectCount + 1 ];   // +1 since we detect ourself.
@@ -143,6 +132,7 @@ public class CSAgent : MonoBehaviour
 	public bool DEBUG_DRAW_AGENT = false;
 	public const bool DEBUG_DRAW_ALL = false;
 	public bool DEBUG_DRAW => DEBUG_DRAW_AGENT || DEBUG_DRAW_ALL;
+	public bool DEBUG_DRAW_MAP = false;	
 
 	private void Awake()
 	{
@@ -174,62 +164,44 @@ public class CSAgent : MonoBehaviour
 
 		// fire our ray into the scene to find if any objects are near
 		int rayHits = Physics2D.CircleCastNonAlloc( transform.position, detect_radius, Vector2.zero, detect_hits );
-		bool hasHits = rayHits > 1;
 
 		// Set the intress map (We only have 1 desternation atm.)
 		int map_intrSlotId = GetMapSlotID( TargetPosition );
 		(float lhs, float rhs) gradientsValues = GetGradients();
-		SetMapSlot( ref map_intress, map_intrSlotId, cm_slots/2, 0.5f, 0.5f, /* gradientsValues.lhs, gradientsValues.rhs,*/ 1 );
+		SetMapSlot( ref map_intress, map_intrSlotId, cm_slots/2, /*0.5f, 0.5f, /**/ gradientsValues.lhs, gradientsValues.rhs, 1 );
 
 		
 
-		if ( hasHits || lastDetectedStaticObject != null )
+		if ( rayHits > 1 )
 		{
 
-			if ( hasHits )
+			for ( int i = 0; i < rayHits; i++ )
 			{
-				for ( int i = 0; i < rayHits; i++ )
+				RaycastHit2D hit = detect_hits[i];
+
+				if ( hit.transform == transform )
+					continue;
+
+				CSAgent otherAgent = hit.transform.GetComponent<CSAgent>();
+
+				if ( otherAgent != null ) // avoid agents. 
 				{
-					RaycastHit2D hit = detect_hits[i];
-
-					if ( hit.transform == transform )
-						continue;
-
-					CSAgent otherAgent = hit.transform.GetComponent<CSAgent>();
-
-					if ( otherAgent != null ) // avoid agents. 
-					{
-						AvoidObject( otherAgent.transform.position, agent_avoidDistance + otherAgent.agent_avoidDistance, agent_avoidMaxRange, 2, "Agent" );
-					}
-					else // avoid static objects
-					{
-						Vector2 cloestPos = hit.collider.ClosestPoint( transform.position );
-						AvoidObject( cloestPos, agent_avoidDistance * 2f, agent_objectAvoidMaxRange, 2, "Obs" );   // this does not really work for large objects
-						lastDetectedStaticObject = hit.collider;
-
-						if ( DEBUG_DRAW )
-						{
-							Debug.DrawLine( cloestPos + new Vector2( -0.25f, 0 ), cloestPos + new Vector2( 0.25f, 0 ), Color.magenta, Time.deltaTime );
-							Debug.DrawLine( cloestPos + new Vector2( 0, -0.25f ), cloestPos + new Vector2( 0, 0.25f ), Color.magenta, Time.deltaTime );
-						}
-
-						if ( DEBUG )
-							Debug.Log( "cloest hit :: " + cloestPos, hit.transform );
-					}
+					AvoidObject( otherAgent.transform.position, agent_avoidDistance + otherAgent.agent_avoidDistance, agent_avoidMaxRange, 2, "Agent" );
 				}
-			}
-			else
-			{
+				else // avoid static objects
+				{
+					Vector2 cloestPos = hit.collider.ClosestPoint( transform.position );
+					AvoidObject( cloestPos, agent_avoidDistance * 2f, agent_objectAvoidMaxRange, 2, "Obs" );   // this does not really work for large objects
 
-				// Avoid the last static object for longer than normal to help prevent getting stuck
-				// in a constant loop of avoid and forget. However its not a ideal solution, but it helps.
+					if ( DEBUG_DRAW )
+					{
+						Debug.DrawLine( cloestPos + new Vector2( -0.25f, 0 ), cloestPos + new Vector2( 0.25f, 0 ), Color.magenta, Time.deltaTime );
+						Debug.DrawLine( cloestPos + new Vector2( 0, -0.25f ), cloestPos + new Vector2( 0, 0.25f ), Color.magenta, Time.deltaTime );
+					}
 
-				Vector2 cloestPos = lastDetectedStaticObject.ClosestPoint( transform.position );
-				AvoidObject( cloestPos, agent_avoidDistance * 2f * lastStaticObject_distanceMultiplier, agent_objectAvoidMaxRange * lastStaticObject_distanceMultiplier, 2, "Obs" );
-
-				if ( Vector3.Distance( transform.position, lastDetectedStaticObject.transform.position ) > agent_objectAvoidMaxRange * lastStaticObject_distanceMultiplier )
-					lastDetectedStaticObject = null;
-
+					if ( DEBUG )
+						Debug.Log( "cloest hit :: " + cloestPos, hit.transform );
+				}
 			}
 
 			MaskDanagerMap();
@@ -277,6 +249,9 @@ public class CSAgent : MonoBehaviour
 		}
 
 		PrintMaps();
+
+		if ( DEBUG_DRAW_MAP )
+			DrawMap();
 	}
 
 	protected virtual void UpdateAgent()
@@ -575,6 +550,26 @@ public class CSAgent : MonoBehaviour
 		print( $"Danager Map: {danStr}" );
 
 		DEBUG_PRINT_MAP = false;
+	}
+
+	private void DrawMap()
+	{
+		// Draw the map around the player
+print( " b bvf fbn" );
+		for ( int i = 0; i < map_intress.Length; i++ )
+		{
+
+			float angle = (i * rotation_step + 90f) * Mathf.Deg2Rad;
+			Vector3 pos = new Vector3( Mathf.Cos( angle ), Mathf.Sin( angle ), 0 ) * 4f;// * map_intress[i];
+
+			if ( map_intress[i] >= 0f )
+				Debug.DrawLine( transform.position, transform.position + pos * map_intress[i], Color.magenta, Time.deltaTime );
+			else if ( map_danager[i] < 0f )
+			{
+				
+				Debug.DrawLine( transform.position, transform.position + pos * 2f, Color.cyan, Time.deltaTime );
+			}
+		}
 	}
 
 	private void PrintDanagerMap( string msg )
