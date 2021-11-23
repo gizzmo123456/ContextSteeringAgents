@@ -85,11 +85,11 @@ using UnityEngine;
 public class CSAgent : MonoBehaviour
 {
 
-	private const bool COUNT_AGENT_COLLISIONS = false;
+	private const bool COUNT_AGENT_COLLISIONS = true;
 
-    const int cm_slotsPer90Deg = 3;
-    const int cm_slots = cm_slotsPer90Deg * 4;
-	const float rotation_step = 360f / cm_slots;
+    private const int cm_slotsPer90Deg = 3;
+    protected const int cm_slots = cm_slotsPer90Deg * 4;
+	protected const float rotation_step = 360f / cm_slots;
 
 	protected Vector3 Forwards => transform.up;
 	protected Vector3 Right => transform.right;
@@ -102,6 +102,7 @@ public class CSAgent : MonoBehaviour
 	[SerializeField] private float agent_radius = 0.5f;
 	public float AgentRadius => agent_radius;
 	[SerializeField] private float agent_avoidRadius = 0; // the amount of distance that we should maintain between agents.
+	[SerializeField] private float agent_objectAvoidRadius = 0.5f; // the amount of distance that we should maintain between agents.
 
 	[SerializeField] private float agent_avoidMaxRange = 4; // this should be above 0 and not exceed the detect radius
 	[SerializeField] private float agent_objectAvoidMaxRange = 1;
@@ -109,7 +110,7 @@ public class CSAgent : MonoBehaviour
 	private float agent_avoidDistance => agent_radius + agent_avoidRadius;
 
 	[Header( "Obstacle detection" )]
-	const int detect_objectCount = 6;
+	const int detect_objectCount = 10;
 	[SerializeField] private RaycastHit2D[] detect_hits = new RaycastHit2D[ detect_objectCount + 1 ];   // +1 since we detect ourself.
 	[SerializeField] private float detect_radius = 5;
 
@@ -137,7 +138,8 @@ public class CSAgent : MonoBehaviour
 	public bool DEBUG_DRAW_AGENT = false;
 	public const bool DEBUG_DRAW_ALL = false;
 	public bool DEBUG_DRAW => DEBUG_DRAW_AGENT || DEBUG_DRAW_ALL;
-	public bool DEBUG_DRAW_MAP = false;	
+	public bool DEBUG_DRAW_MAP = false;
+	public bool DEBUG_GRADIENT = false;
 
 	private void Awake()
 	{
@@ -181,13 +183,16 @@ public class CSAgent : MonoBehaviour
 		// ..
 		ClearMaps();
 
+
 		// fire our ray into the scene to find if any objects are near
 		int rayHits = Physics2D.CircleCastNonAlloc( transform.position, detect_radius, Vector2.zero, detect_hits );
 
+		
+
 		// Set the intress map (We only have 1 desternation atm.)
 		int map_intrSlotId = GetMapSlotID( TargetPosition );
-		(float lhs, float rhs) gradientsValues = GetGradients();
-		SetMapSlot( ref map_intress, map_intrSlotId, cm_slots/2, /*0.5f, 0.5f, /**/ gradientsValues.lhs, gradientsValues.rhs, 1 );
+		(float lhs, float rhs) gradientsValues = GetGradients( map_intrSlotId  );
+		SetMapSlot( ref map_intress, map_intrSlotId, cm_slots/2-1, /*0.5f, 0.5f, /**/ gradientsValues.lhs, gradientsValues.rhs, 1 );
 
 		
 
@@ -210,7 +215,7 @@ public class CSAgent : MonoBehaviour
 				else // avoid static objects
 				{
 					Vector2 cloestPos = hit.collider.ClosestPoint( transform.position );
-					AvoidObject( cloestPos, agent_avoidDistance * 2f, agent_objectAvoidMaxRange, 2, "Obs" );   // this does not really work for large objects
+					AvoidObject( cloestPos, agent_objectAvoidRadius, agent_objectAvoidMaxRange, 2, "Obs" );   // this does not really work for large objects
 
 					if ( DEBUG_DRAW )
 					{
@@ -225,7 +230,17 @@ public class CSAgent : MonoBehaviour
 
 			CreateMaskMap();
 			int moveTo_slotID = MaskIntrestMap();
-			float moveTo_heading = /*moveTo_slotID; //*/ GetIntressGradentSlot( moveTo_slotID, 2 );
+			float moveTo_heading = /*moveTo_slotID; //*/ GetIntressGradentSlot( moveTo_slotID, 1 );
+
+			float mtheading = GetIntressGradentSlot( moveTo_slotID, 1 );
+			//print( $"{name}, {moveTo_slotID}, {mtheading}" );
+			mtheading = (mtheading * rotation_step + 90f) * Mathf.Deg2Rad;
+			Vector3 pos = new Vector3( Mathf.Cos( mtheading ), Mathf.Sin( mtheading ), 0 ) * 4f;
+
+			if ( DEBUG_DRAW_MAP )
+				Debug.DrawLine( transform.position, transform.position + pos, Color.green, Time.deltaTime );
+
+
 
 			targetRotation = moveTo_heading * rotation_step;
 			targetRotation = ClampRotation( targetRotation );
@@ -234,7 +249,7 @@ public class CSAgent : MonoBehaviour
 			rotUpdate = ClampRotation( rotUpdate );
 
 			if ( rotUpdate > 180f )
-				rotUpdate = -(360 - rotUpdate);	
+				rotUpdate = -(360 - rotUpdate);	// why is this negative ?
 
 			rotUpdate *= 0.5f;
 
@@ -250,10 +265,11 @@ public class CSAgent : MonoBehaviour
 				// slowing down the agent to reduce the risk :)
 				RotateDelta( rotUpdate );
 
-				currentSlotId = GetMapSlotID( currentRotation );
-				float danager = Mathf.Clamp01( map_danager[currentSlotId] * map_intress[ currentSlotId ] ) ;
+				currentSlotId = GetMapSlotID( targetRotation ); // currentRotation );
+				float danager = Mathf.Clamp01( map_danager[currentSlotId] ) ;
+				 
+				Move( agent_moveSpeed );
 
-				Move( agent_moveSpeed * (1f - danager) );
 			}
 			else
 			{
@@ -318,13 +334,16 @@ public class CSAgent : MonoBehaviour
 
 		currentRotation = ClampRotation( currentRotation + rotateDelta );
 
-		transform.eulerAngles = new Vector3( 0, 0, currentRotation );
+		transform.eulerAngles = new Vector3( 0, 0, targetRotation );// currentRotation );
 	}
 
 	private void SetMapSlot( ref float[] map, int slotID, int gradientSlots, float lhsGradientMultiplier, float rhsGradientMultiplier, float value )
 	{
 
-		gradientSlots++; // add on so we get at least 'rolloffSlots' above 0
+		if ( map == map_intress && DEBUG_GRADIENT )
+		{
+			print( $"Set intress map {name} :: {slotID} -> {value}" );
+		}
 
 		if ( value > map[slotID] )
 			map[slotID] = value;
@@ -344,11 +363,13 @@ public class CSAgent : MonoBehaviour
 			if ( lhs < 0 )
 				lhs += cm_slots;
 
-			rhs_value *= rhsGradientMultiplier;
-			lhs_value *= lhsGradientMultiplier;
+			rhs_value *= rhsGradientMultiplier;// * ( 1f - i / gradientSlots );
+			lhs_value *= lhsGradientMultiplier;// * ( 1f - i / gradientSlots );
 
 			if ( rhs_value > map[rhs] )
 				map[rhs] = rhs_value;
+
+			//print( $"{name} - {lhs}" );
 
 			if ( lhs_value > map[lhs] )
 				map[lhs] = lhs_value;
@@ -432,7 +453,7 @@ public class CSAgent : MonoBehaviour
 
 	}
 
-	protected virtual (float lhs, float rhs) GetGradients()
+	protected virtual (float lhs, float rhs) GetGradients( int intressSlotId )
 	{
 		return (0.75f, 0.75f);
 	}
@@ -452,8 +473,8 @@ public class CSAgent : MonoBehaviour
 		for ( int i = 1; i <= slots; i++ )
 		{
 
-			int lhs = i - 1;
-			int rhs = i + 1;
+			int lhs = slotId - i;
+			int rhs = slotId + i;
 
 			if ( lhs < 0 )
 				lhs += cm_slots;
@@ -577,18 +598,23 @@ public class CSAgent : MonoBehaviour
 			return;
 
 		string intrStr = "| ";
-		string danStr  = "|";
-		string maskStr = "|";
+		string danStr  = "| ";
+		string maskStr = "| ";
 
 		for ( int i = 0; i < cm_slots; i++ )
 		{
-			intrStr += map_intress[i] + " | ";
-			danStr += map_danager[i] + " | ";
-			maskStr += map_mask[i] + " | ";
+			string current = "";
+			if ( i == currentSlotId )
+				current = "<";
+
+			intrStr +=  $"{i}: {map_intress[i]} :: {current} | ";
+			danStr +=   $"{i}: {map_danager[i]} :: {current} | ";
+			maskStr +=  $"{i}: {map_mask[i]} :: {current} | ";
 		}
 
 		print( $"Intresst Map: {intrStr}" );
 		print( $"Danager Map: {danStr}" );
+		print( $"Danager Map: {maskStr}" );
 
 		DEBUG_PRINT_MAP = false;
 	}
@@ -605,10 +631,9 @@ public class CSAgent : MonoBehaviour
 
 			if ( map_intress[i] >= 0f )
 				Debug.DrawLine( transform.position, transform.position + pos * map_intress[i], Color.magenta, Time.deltaTime );
-			else if ( map_danager[i] < 0f )
+			else if ( map_mask[i] < 0f )
 			{
-				
-				Debug.DrawLine( transform.position, transform.position + pos * 2f, Color.cyan, Time.deltaTime );
+				Debug.DrawLine( transform.position, transform.position + pos * map_danager[i], Color.cyan, Time.deltaTime );
 			}
 		}
 	}

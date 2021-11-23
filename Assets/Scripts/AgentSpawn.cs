@@ -28,6 +28,9 @@ public class AgentSpawn : MonoBehaviour
 	void Update()
     {
 
+        if ( !SceneManagement.started )
+            return;
+
         remainingTime -= Time.deltaTime;
 
         if ( remainingTime > 0f || count > maxSpawn)

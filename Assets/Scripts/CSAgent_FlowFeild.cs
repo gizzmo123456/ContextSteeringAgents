@@ -16,8 +16,6 @@ public class CSAgent_FlowFeild : CSAgent
 	private Vector3 direction = Vector3.zero;
 	protected override Vector3 TargetPosition => (direction * targetLength) + transform.position;
 
-	public bool DEBUG_GRADIENT = false;
-
 	protected override void Start()
 	{
 		base.Start();
@@ -52,40 +50,42 @@ public class CSAgent_FlowFeild : CSAgent
 
 	}
 
-	protected override (float lhs, float rhs) GetGradients()
+	protected override (float lhs, float rhs) GetGradients( int intressSlotId )
 	{
 
-		float angle = GetAngleFromVectors( Forwards, direction );
+		float slotId = currentRotation / rotation_step;//*/ GetAngleFromVectors( Forwards, direction, false );
+
+		float lhsGrad = 0.5f;
+		float rhsGrad = 0.5f;
+
+		float lhsSteps = -1;
+		float rhsSteps = -1;
+
+		if ( intressSlotId > slotId )
+		{
+			lhsSteps = ( cm_slots - intressSlotId + slotId );
+			rhsSteps = ( intressSlotId - slotId );
+			lhsGrad = 1f - lhsSteps / (float)cm_slots;
+			rhsGrad = 1f - rhsSteps / (float)cm_slots;
+		}
+		else if ( intressSlotId < slotId )
+		{
+			lhsSteps = ( cm_slots - intressSlotId + slotId - cm_slots );
+			rhsSteps = ( cm_slots + intressSlotId - slotId );
+			lhsGrad = 1f - lhsSteps / (float)cm_slots;
+			rhsGrad = 1f - rhsSteps / (float)cm_slots;
+		}
+
+		//float rhsRot = Mathf.Abs(currentSlotId - intressSlotId);// * rotation_step - angle;				// move right through the context map (++)
+		//float lhsRot = Mathf.Abs(currentSlotId - ( cm_slots - intressSlotId ) );// * rotation_step + angle;    // move left through the context map (--)
+
+		//float rhsGrad = rhsRot / cm_slots; //360f;
+		//float lhsGrad = lhsRot / cm_slots; //360f;
 		
-		float lhs = 0.9f;
-		float rhs = 0.9f;
-
-		if ( angle < 0 )
-		{
-			angle = Mathf.Abs( angle );
-			lhs = ( 360f - angle ) / 360f;
-			rhs = ( 360f - ( 360f - angle ) ) / 360f;
-
-			//Debug.DrawLine( transform.position, transform.position + transform.right * -2f, Color.blue );
-		}
-		else if ( angle > 0 )
-		{
-			
-			rhs = ( 360f - angle ) / 360f;
-			lhs = ( 360f - ( 360f - angle ) ) / 360f;
-
-			//Debug.DrawLine( transform.position, transform.position + transform.right * 2f, Color.red );
-
-		}
-		else
-		{
-			//Debug.DrawLine( transform.position, transform.position + transform.forward * 2f, Color.green );
-		}
-
 		if ( DEBUG_GRADIENT )
-			print( $"{name} :: {angle} ## {lhs} ## {rhs} ## fwr {Forwards} ## dir {direction}" );
+			print( $"{name} :: a: {currentSlotId} ## lhs: {lhsSteps}/{lhsGrad} ## rhs: {rhsSteps}/{rhsGrad} ||");// ## fwr fwr vect: {Forwards} ## dir: {direction}" );
 
-		return (lhs, rhs);
+		return (rhsGrad, lhsGrad);
 	}
 
 	protected override void PRINT_DEBUG_STOP_MOVE( string msg)

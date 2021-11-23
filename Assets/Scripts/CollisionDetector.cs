@@ -11,7 +11,7 @@ public class CollisionDetector : MonoBehaviour
 		// make sure there is an agent present.
 		// and insure that the collider setting match.
 
-		CSAgent agent = GetComponentInParent<CSAgent_FlowFeild>();
+		CSAgent agent = GetComponentInParent<CSAgent>();
 
 		if ( agent == null )
 		{

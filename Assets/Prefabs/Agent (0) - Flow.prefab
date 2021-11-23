@@ -169,10 +169,11 @@ MonoBehaviour:
   agent_colour: {r: 1, g: 0, b: 0, a: 1}
   agent_moveSpeed: 3
   agent_radius: 0.5
-  agent_avoidRadius: 0.25
+  agent_avoidRadius: 0
+  agent_objectAvoidRadius: 0.5
   agent_avoidMaxRange: 0.5
-  agent_objectAvoidMaxRange: 0.1
-  detect_radius: 1
+  agent_objectAvoidMaxRange: 0.5
+  detect_radius: 1.5
   target: {fileID: 0}
   maxRotateStep: 360
   DEBUG: 0
@@ -180,10 +181,10 @@ MonoBehaviour:
   DEBUG_STOP_MOVE: 0
   DEBUG_DRAW_AGENT: 0
   DEBUG_DRAW_MAP: 0
+  DEBUG_GRADIENT: 0
   respwanOnStart: 0
   flowFeild: {fileID: 0}
   targetLength: 5
-  DEBUG_GRADIENT: 0
 --- !u!1 &6501560626575049212
 GameObject:
   m_ObjectHideFlags: 0
