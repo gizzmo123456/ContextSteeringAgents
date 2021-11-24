@@ -223,11 +223,10 @@ public class CSAgent : MonoBehaviour
 			}
 
 			CreateMaskMap();
-			int moveTo_slotID = ApplyIntressGradient(); // MaskIntrestMap();
-			float moveTo_heading = /*moveTo_slotID; //*/ GetIntressGradentSlot( moveTo_slotID, 1 );
+			int moveTo_slotID = GetBestIntresstSlotId();
+			float moveTo_heading = GetIntressGradentSlot( moveTo_slotID, 1 );
 
 			float mtheading = GetIntressGradentSlot( moveTo_slotID, 1 );
-			//print( $"{name}, {moveTo_slotID}, {mtheading}" );
 			mtheading = (mtheading * rotation_step + 90f) * Mathf.Deg2Rad;
 			Vector3 pos = new Vector3( Mathf.Cos( mtheading ), Mathf.Sin( mtheading ), 0 ) * 4f;
 
@@ -411,7 +410,7 @@ public class CSAgent : MonoBehaviour
 
 	}
 
-	private int ApplyIntressGradient()
+	private int GetBestIntresstSlotId()
 	{
 		
 		float agentCurrentSlot = currentRotation / rotation_step;
@@ -448,40 +447,6 @@ public class CSAgent : MonoBehaviour
 		}
 
 		return maxIntressId;
-
-	}
-
-
-	/// <summary>
-	/// Applies the damager mask and return the highest slot id
-	/// </summary>
-	private int MaskIntrestMap()
-	{
-
-		if ( DEBUG )
-			PrintIntresstMap( "pre" );
-
-		float highestValue = -1;
-		int highestSlotID = -1;
-
-		for ( int i = 0; i < cm_slots; i++ )
-		{
-
-			if ( map_mask[i] == -1 )
-				map_intress[i] = -1;
-
-			if ( map_intress[i] > highestValue )
-			{
-				highestValue = map_intress[i];
-				highestSlotID = i;
-			}
-
-		}
-
-		if ( DEBUG )
-			PrintIntresstMap( "post" );
-
-		return highestSlotID;
 
 	}
 
