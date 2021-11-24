@@ -139,6 +139,7 @@ public class CSAgent : MonoBehaviour
 	public const bool DEBUG_DRAW_ALL = false;
 	public bool DEBUG_DRAW => DEBUG_DRAW_AGENT || DEBUG_DRAW_ALL;
 	public bool DEBUG_DRAW_MAP = false;
+	public bool DEBUG_GRADIENT_2 = false;
 	public bool DEBUG_GRADIENT = false;
 
 	private void Awake()
@@ -188,13 +189,10 @@ public class CSAgent : MonoBehaviour
 		int rayHits = Physics2D.CircleCastNonAlloc( transform.position, detect_radius, Vector2.zero, detect_hits );
 
 		
-
 		// Set the intress map (We only have 1 desternation atm.)
 		int map_intrSlotId = GetMapSlotID( TargetPosition );
 		(float lhs, float rhs) gradientsValues = GetGradients( map_intrSlotId  );
-		SetMapSlot( ref map_intress, map_intrSlotId, cm_slots/2-1, /*0.5f, 0.5f, /**/ gradientsValues.lhs, gradientsValues.rhs, 1 );
-
-		
+		SetMapSlot( ref map_intress, map_intrSlotId, 0, 0, 0, 1 );
 
 		if ( rayHits > 1 )
 		{
@@ -206,9 +204,9 @@ public class CSAgent : MonoBehaviour
 				if ( hit.transform == transform )
 					continue;
 
-				CSAgent otherAgent = hit.transform.GetComponent<CSAgent>();
+				CSAgent otherAgent;
 
-				if ( otherAgent != null ) // avoid agents. 
+				if ( hit.transform.TryGetComponent<CSAgent>( out otherAgent) )
 				{
 					AvoidObject( otherAgent.transform.position, agent_avoidDistance + otherAgent.agent_avoidDistance, agent_avoidMaxRange, 2, "Agent" );
 				}
@@ -229,7 +227,7 @@ public class CSAgent : MonoBehaviour
 			}
 
 			CreateMaskMap();
-			int moveTo_slotID = MaskIntrestMap();
+			int moveTo_slotID = ApplyIntressGradient(); // MaskIntrestMap();
 			float moveTo_heading = /*moveTo_slotID; //*/ GetIntressGradentSlot( moveTo_slotID, 1 );
 
 			float mtheading = GetIntressGradentSlot( moveTo_slotID, 1 );
@@ -239,8 +237,6 @@ public class CSAgent : MonoBehaviour
 
 			if ( DEBUG_DRAW_MAP )
 				Debug.DrawLine( transform.position, transform.position + pos, Color.green, Time.deltaTime );
-
-
 
 			targetRotation = moveTo_heading * rotation_step;
 			targetRotation = ClampRotation( targetRotation );
@@ -416,6 +412,46 @@ public class CSAgent : MonoBehaviour
 		if ( DEBUG )
 			PrintDanagerMap( "Post" );
 
+
+	}
+
+	private int ApplyIntressGradient()
+	{
+		
+		float agentCurrentSlot = currentRotation / rotation_step;
+		float maxDistance = cm_slots / 2f;
+
+		float maxIntress = -1;
+		int maxIntressId = -1;
+
+		for ( int i = 0; i < cm_slots; i++ )
+		{
+
+			if ( map_mask[i] == -1 )
+			{
+				map_intress[i] = -1;
+			}
+			else
+			{
+				
+				// Get the min distance between this slot and the agents current slot
+				float slotsFromPlayer = Mathf.Min( Mathf.Abs( agentCurrentSlot - i ), cm_slots - Mathf.Abs( agentCurrentSlot - i ) );
+				float intress = ( 1f - slotsFromPlayer / maxDistance ) * 0.9f; // * by 0.9 so its always less than the intresst slot.
+
+				if ( intress > map_intress[i] )
+					map_intress[i] = intress;
+				
+				if ( map_intress[i] > maxIntress )
+				{
+					maxIntress = map_intress[i];
+					maxIntressId = i;
+				}
+
+			}
+			
+		}
+
+		return maxIntressId;
 
 	}
 
