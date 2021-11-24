@@ -181,17 +181,13 @@ public class CSAgent : MonoBehaviour
 
 		UpdateAgent();
 
-		// ..
 		ClearMaps();
-
 
 		// fire our ray into the scene to find if any objects are near
 		int rayHits = Physics2D.CircleCastNonAlloc( transform.position, detect_radius, Vector2.zero, detect_hits );
 
-		
 		// Set the intress map (We only have 1 desternation atm.)
 		int map_intrSlotId = GetMapSlotID( TargetPosition );
-		(float lhs, float rhs) gradientsValues = GetGradients( map_intrSlotId  );
 		SetMapSlot( ref map_intress, map_intrSlotId, 0, 0, 0, 1 );
 
 		if ( rayHits > 1 )
@@ -206,7 +202,7 @@ public class CSAgent : MonoBehaviour
 
 				CSAgent otherAgent;
 
-				if ( hit.transform.TryGetComponent<CSAgent>( out otherAgent) )
+				if ( hit.transform.TryGetComponent( out otherAgent) )
 				{
 					AvoidObject( otherAgent.transform.position, agent_avoidDistance + otherAgent.agent_avoidDistance, agent_avoidMaxRange, 2, "Agent" );
 				}
@@ -487,11 +483,6 @@ public class CSAgent : MonoBehaviour
 
 		return highestSlotID;
 
-	}
-
-	protected virtual (float lhs, float rhs) GetGradients( int intressSlotId )
-	{
-		return (0.75f, 0.75f);
 	}
 
 	/// <summary>

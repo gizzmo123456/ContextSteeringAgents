@@ -50,44 +50,6 @@ public class CSAgent_FlowFeild : CSAgent
 
 	}
 
-	protected override (float lhs, float rhs) GetGradients( int intressSlotId )
-	{
-
-		float slotId = currentRotation / rotation_step;//*/ GetAngleFromVectors( Forwards, direction, false );
-
-		float lhsGrad = 0.5f;
-		float rhsGrad = 0.5f;
-
-		float lhsSteps = -1;
-		float rhsSteps = -1;
-
-		if ( intressSlotId > slotId )
-		{
-			lhsSteps = ( cm_slots - intressSlotId + slotId );
-			rhsSteps = ( intressSlotId - slotId );
-			lhsGrad = 1f - lhsSteps / (float)cm_slots;
-			rhsGrad = 1f - rhsSteps / (float)cm_slots;
-		}
-		else if ( intressSlotId < slotId )
-		{
-			lhsSteps = ( cm_slots - intressSlotId + slotId - cm_slots );
-			rhsSteps = ( cm_slots + intressSlotId - slotId );
-			lhsGrad = 1f - lhsSteps / (float)cm_slots;
-			rhsGrad = 1f - rhsSteps / (float)cm_slots;
-		}
-
-		//float rhsRot = Mathf.Abs(currentSlotId - intressSlotId);// * rotation_step - angle;				// move right through the context map (++)
-		//float lhsRot = Mathf.Abs(currentSlotId - ( cm_slots - intressSlotId ) );// * rotation_step + angle;    // move left through the context map (--)
-
-		//float rhsGrad = rhsRot / cm_slots; //360f;
-		//float lhsGrad = lhsRot / cm_slots; //360f;
-		
-		if ( DEBUG_GRADIENT )
-			print( $"{name} :: a: {currentSlotId} ## lhs: {lhsSteps}/{lhsGrad} ## rhs: {rhsSteps}/{rhsGrad} ||");// ## fwr fwr vect: {Forwards} ## dir: {direction}" );
-
-		return (rhsGrad, lhsGrad);
-	}
-
 	protected override void PRINT_DEBUG_STOP_MOVE( string msg)
 	{
 		//print( $"{name} :: {msg} -> {GetAngleFromVectors( Forwards, direction )}" );
