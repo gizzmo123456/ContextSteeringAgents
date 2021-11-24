@@ -131,6 +131,8 @@ public class CSAgent : MonoBehaviour
 	protected float rotStep = 0;
 	[SerializeField] protected float maxRotateStep = 90f;
 
+	private GameObject collisionCount;
+
 	// DEBUGING
 	public bool DEBUG = false;
 	public bool DEBUG_PRINT_MAP = false;
@@ -152,7 +154,7 @@ public class CSAgent : MonoBehaviour
 		// Spawn the collisionCounter.
 		if ( COUNT_AGENT_COLLISIONS )
 		{
-			GameObject collisionCount = new GameObject();
+			collisionCount = new GameObject();
 			collisionCount.AddComponent<CollisionDetector>();
 			collisionCount.transform.parent = transform;
 			collisionCount.transform.localPosition = Vector3.zero;
@@ -190,14 +192,15 @@ public class CSAgent : MonoBehaviour
 		int map_intrSlotId = GetMapSlotID( TargetPosition );
 		SetMapSlot( ref map_intress, map_intrSlotId, 0, 0, 0, 1 );
 
-		if ( rayHits > 1 )
+		// There no point checking the objects if we only detecting ourself.
+		if ( rayHits > (collisionCount != null ? 2 : 1) )
 		{
 
 			for ( int i = 0; i < rayHits; i++ )
 			{
 				RaycastHit2D hit = detect_hits[i];
 
-				if ( hit.transform == transform )
+				if ( hit.transform == transform || hit.transform == collisionCount.transform )
 					continue;
 
 				CSAgent otherAgent;
@@ -233,7 +236,7 @@ public class CSAgent : MonoBehaviour
 			rotUpdate = ClampRotation( rotUpdate );
 
 			if ( rotUpdate > 180f )
-				rotUpdate = -(360 - rotUpdate);	// why is this negative ?
+				rotUpdate = -(360 - rotUpdate);	
 
 			rotUpdate *= 0.5f;
 
@@ -260,6 +263,7 @@ public class CSAgent : MonoBehaviour
 				PRINT_DEBUG_STOP_MOVE();
 				
 			}
+
 		}
 		else if ( ! DEBUG_STOP_MOVE )
 		{
@@ -318,7 +322,7 @@ public class CSAgent : MonoBehaviour
 
 		currentRotation = ClampRotation( currentRotation + rotateDelta );
 
-		transform.eulerAngles = new Vector3( 0, 0, targetRotation );// currentRotation );
+		transform.eulerAngles = new Vector3( 0, 0, /*targetRotation );//*/ currentRotation );
 	}
 
 	private void SetMapSlot( ref float[] map, int slotID, int gradientSlots, float lhsGradientMultiplier, float rhsGradientMultiplier, float value )
@@ -347,13 +351,11 @@ public class CSAgent : MonoBehaviour
 			if ( lhs < 0 )
 				lhs += cm_slots;
 
-			rhs_value *= rhsGradientMultiplier;// * ( 1f - i / gradientSlots );
-			lhs_value *= lhsGradientMultiplier;// * ( 1f - i / gradientSlots );
+			rhs_value *= rhsGradientMultiplier;
+			lhs_value *= lhsGradientMultiplier;
 
 			if ( rhs_value > map[rhs] )
 				map[rhs] = rhs_value;
-
-			//print( $"{name} - {lhs}" );
 
 			if ( lhs_value > map[lhs] )
 				map[lhs] = lhs_value;
@@ -422,6 +424,8 @@ public class CSAgent : MonoBehaviour
 			else
 			{
 				
+				// NOTE: I cant help but think i need to take the intress slot into account.
+
 				// Get the min distance between this slot and the agents current slot
 				float slotsFromPlayer = Mathf.Min( Mathf.Abs( agentCurrentSlot - i ), cm_slots - Mathf.Abs( agentCurrentSlot - i ) );
 				float intress = ( 1f - slotsFromPlayer / maxDistance ) * 0.9f; // * by 0.9 so its always less than the intresst slot.
