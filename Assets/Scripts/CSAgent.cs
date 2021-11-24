@@ -226,13 +226,6 @@ public class CSAgent : MonoBehaviour
 			int moveTo_slotID = GetBestIntresstSlotId();
 			float moveTo_heading = GetIntressGradentSlot( moveTo_slotID, 1 );
 
-			float mtheading = GetIntressGradentSlot( moveTo_slotID, 1 );
-			mtheading = (mtheading * rotation_step + 90f) * Mathf.Deg2Rad;
-			Vector3 pos = new Vector3( Mathf.Cos( mtheading ), Mathf.Sin( mtheading ), 0 ) * 4f;
-
-			if ( DEBUG_DRAW_MAP )
-				Debug.DrawLine( transform.position, transform.position + pos, Color.green, Time.deltaTime );
-
 			targetRotation = moveTo_heading * rotation_step;
 			targetRotation = ClampRotation( targetRotation );
 
