@@ -175,12 +175,13 @@ MonoBehaviour:
   agent_objectAvoidMaxRange: 0.5
   detect_radius: 1.5
   target: {fileID: 0}
-  maxRotateStep: 360
+  maxRotateStep: 45
   DEBUG: 0
   DEBUG_PRINT_MAP: 0
   DEBUG_STOP_MOVE: 0
   DEBUG_DRAW_AGENT: 0
   DEBUG_DRAW_MAP: 0
+  DEBUG_GRADIENT_2: 0
   DEBUG_GRADIENT: 0
   respwanOnStart: 0
   flowFeild: {fileID: 0}
