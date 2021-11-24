@@ -425,6 +425,7 @@ public class CSAgent : MonoBehaviour
 			{
 				
 				// NOTE: I cant help but think i need to take the intress slot into account.
+				// However this seems to work really well
 
 				// Get the min distance between this slot and the agents current slot
 				float slotsFromPlayer = Mathf.Min( Mathf.Abs( agentCurrentSlot - i ), cm_slots - Mathf.Abs( agentCurrentSlot - i ) );
