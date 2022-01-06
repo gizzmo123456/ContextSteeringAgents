@@ -205,7 +205,7 @@ public class CSAgent : MonoBehaviour
 
 				CSAgent otherAgent;
 
-				if ( hit.transform.TryGetComponent( out otherAgent) )
+				if ( hit.transform.TryGetComponent( out otherAgent ) )
 				{
 					AvoidObject( otherAgent.transform.position, agent_avoidDistance + otherAgent.agent_avoidDistance, agent_avoidMaxRange, 2, "Agent" );
 				}
@@ -253,7 +253,7 @@ public class CSAgent : MonoBehaviour
 				RotateDelta( rotUpdate );
 
 				currentSlotId = GetMapSlotID( targetRotation ); // currentRotation );
-				float danager = Mathf.Clamp01( map_danager[currentSlotId] ) ;
+				float danager = Mathf.Clamp01( map_danager[currentSlotId] ) ; // TODO: used ??
 				 
 				Move( agent_moveSpeed );
 
