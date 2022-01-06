@@ -85,7 +85,7 @@ using UnityEngine;
 public class CSAgent : MonoBehaviour
 {
 
-	private const bool COUNT_AGENT_COLLISIONS = true;
+	private const bool COUNT_AGENT_COLLISIONS = false;
 
     private const int cm_slotsPer90Deg = 3;
     protected const int cm_slots = cm_slotsPer90Deg * 4;
@@ -200,7 +200,8 @@ public class CSAgent : MonoBehaviour
 			{
 				RaycastHit2D hit = detect_hits[i];
 
-				if ( hit.transform == transform || hit.transform == collisionCount.transform )
+				
+				if ( hit.transform == transform || ( collisionCount != null && hit.transform == collisionCount.transform) )
 					continue;
 
 				CSAgent otherAgent;
