@@ -16928,7 +16928,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startInTime: 1
-  endInTime: 30
+  endInTime: -2
 --- !u!1001 &1254462873
 PrefabInstance:
   m_ObjectHideFlags: 0

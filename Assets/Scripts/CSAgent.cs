@@ -620,11 +620,13 @@ public class CSAgent : MonoBehaviour
 			float angle = (i * rotation_step + 90f) * Mathf.Deg2Rad;
 			Vector3 pos = new Vector3( Mathf.Cos( angle ), Mathf.Sin( angle ), 0 ) * 4f;// * map_intress[i];
 
+			Debug.DrawLine( transform.position, transform.position + pos, Color.white );
+
 			if ( map_intress[i] >= 0f )
-				Debug.DrawLine( transform.position, transform.position + pos * map_intress[i], Color.magenta, Time.deltaTime );
+				Debug.DrawLine( transform.position, transform.position + pos * 0.125f + pos * map_intress[i], Color.green, Time.deltaTime );
 			else if ( map_mask[i] < 0f )
 			{
-				Debug.DrawLine( transform.position, transform.position + pos * map_danager[i], Color.cyan, Time.deltaTime );
+				Debug.DrawLine( transform.position, transform.position + pos * 0.123f + pos * map_danager[i] * 6f, Color.magenta, Time.deltaTime );
 			}
 		}
 	}

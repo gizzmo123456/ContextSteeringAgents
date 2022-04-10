@@ -2604,7 +2604,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 41
+  orthographic size: 33
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -2628,7 +2628,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 474674526}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 39.7, y: 39, z: -10}
+  m_LocalPosition: {x: 34, y: 34.5, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -4747,11 +4747,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   area: {x: 70, y: 70}
   sourceCells:
-  - {x: 59, y: 2}
-  - {x: 2, y: 14}
-  - {x: 67, y: 27}
-  - {x: 67, y: 60}
-  - {x: 23, y: 67}
+  - {x: 53, y: 2}
+  - {x: 2, y: 12}
+  - {x: 67, y: 33}
+  - {x: 24, y: 67}
   rayCellSize: 0.7
   detectObjectsMask:
     serializedVersion: 2
@@ -4784,8 +4783,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   flowFeild: {fileID: 1252659343}
   agent: {fileID: 6501560626213451086, guid: 0bddab5e448649b43b4fabbcd52171ac, type: 3}
-  agentsToSpwan: 49
-  spwanTime: 0.1
+  agentsToSpwan: 250
+  spwanTime: 0.02
   minMoveSpeed: 2
   maxMoveSpeed: 5
   rayTest: 0
@@ -5695,7 +5694,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 71be2024f2f1ae946862b94e6b501dd0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startInTime: 1
+  startInTime: 7.5
   endInTime: -2
 --- !u!114 &1434362711
 MonoBehaviour:
