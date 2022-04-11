@@ -1,5 +1,5 @@
 # Context Steering Agents
-## COmp702 - Falmouth University Project
+## Comp702 - Falmouth University Project
 
 This project use Unity 20202.3.12f (https://unity3d.com/get-unity/download/archive)
 
